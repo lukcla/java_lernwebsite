@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programmierung 2 · Teil 1 – Lernwebsite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN-TOKENS
+     ============================================================ */
+  :root {
+    --bg:        #000000;
+    --surface:   #111111;
+    --surface-2: #1c1c1c;
+    --ink:       #e8eaed;
+    --ink-soft:  #9aa0ab;
+    --line:      #2e2e2e;
+    --accent:    #e05252;   /* Rot – Primärakzent */
+    --accent-soft: #2d0f0f;
+    --amber:     #e0a04a;   /* Bernstein – Code/Hinweise */
+    --amber-soft:#2a1d05;
+    --code-bg:   #080808;
+    --code-ink:  #e6e9ee;
+    --radius:    10px;
+    --sidebar-w: 300px;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.35);
+  }
+  [data-theme="dark"] {
+    --bg:        #000000;
+    --surface:   #0d0d0d;
+    --surface-2: #151515;
+    --ink:       #e8eaed;
+    --ink-soft:  #9aa0ab;
+    --line:      #222222;
+    --accent:    #e05252;
+    --accent-soft: #2d0f0f;
+    --amber:     #e0a04a;
+    --amber-soft:#2a1d05;
+    --code-bg:   #050505;
+    --code-ink:  #dfe3ea;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 6px 20px rgba(0,0,0,.45);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+  body {
+    margin: 0;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    font-size: 16px;
+  }
+  .mono { font-family: "IBM Plex Mono", monospace; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ============================================================
+     TOPBAR
+     ============================================================ */
+  .topbar {
+    position: fixed; inset: 0 0 auto 0; height: 64px; z-index: 50;
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 20px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .brand {
+    display: flex; align-items: baseline; gap: 10px; min-width: 0;
+  }
+  .brand-kicker {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; color: var(--accent); font-weight: 600;
+    letter-spacing: .04em; white-space: nowrap;
+  }
+  .brand-title { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .spacer { flex: 1; }
+  .btn-ghost {
+    border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); border-radius: 8px; padding: 7px 12px;
+    font: inherit; font-size: 13.5px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  #menuBtn { display: none; }
+
+  /* ============================================================
+     LAYOUT: SIDEBAR + MAIN
+     ============================================================ */
+  .layout { display: flex; padding-top: 64px; min-height: 100vh; }
+
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    position: sticky; top: 64px; height: calc(100vh - 64px);
+    overflow-y: auto; padding: 22px 14px 40px 18px;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .nav-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--ink-soft); margin: 6px 8px 10px;
+  }
+  .nav-chapter { margin-bottom: 2px; }
+  .nav-chapter > a {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    text-decoration: none; color: var(--ink); font-weight: 500; font-size: 14px;
+  }
+  .nav-chapter > a:hover { background: var(--surface-2); }
+  .nav-chapter > a.active { background: var(--accent-soft); color: var(--accent); }
+  .nav-num {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    color: var(--ink-soft); width: 22px; flex-shrink: 0; text-align: right;
+  }
+  .nav-chapter > a.active .nav-num { color: var(--accent); }
+  .nav-sub { list-style: none; margin: 0 0 4px; padding: 0 0 0 40px; }
+  .nav-sub a {
+    display: block; padding: 4px 8px; border-radius: 6px;
+    font-size: 13px; color: var(--ink-soft); text-decoration: none;
+    border-left: 2px solid var(--line); padding-left: 10px; margin-left: -10px;
+  }
+  .nav-sub a:hover { color: var(--accent); border-left-color: var(--accent); }
+
+  main {
+    flex: 1; min-width: 0;
+    padding: 40px clamp(20px, 5vw, 64px) 120px;
+    max-width: 980px;
+  }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--surface); box-shadow: var(--shadow);
+    padding: 36px clamp(22px, 4vw, 44px); margin-bottom: 56px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    /* Signatur: Code-Gutter – schmale Linienleiste wie in einem Editor */
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 6px;
+    background: linear-gradient(180deg, var(--accent), var(--amber));
+  }
+  .hero h1 {
+    margin: 6px 0 10px; font-size: clamp(26px, 4vw, 36px);
+    line-height: 1.2; letter-spacing: -.01em;
+  }
+  .hero .lead { color: var(--ink-soft); max-width: 60ch; margin: 0 0 22px; }
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px; margin-top: 8px;
+  }
+  .meta-card {
+    background: var(--surface-2); border-radius: 8px; padding: 12px 14px;
+    font-size: 13.5px;
+  }
+  .meta-card .k {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft);
+    display: block; margin-bottom: 3px;
+  }
+
+  /* ============================================================
+     KAPITEL-SEKTIONEN
+     ============================================================ */
+  .chapter { margin-bottom: 72px; scroll-margin-top: 84px; }
+  .chapter-head { margin-bottom: 22px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    color: var(--accent); font-weight: 600; letter-spacing: .03em;
+  }
+  .eyebrow .pages { color: var(--ink-soft); font-weight: 400; }
+  .chapter-head h2 {
+    margin: 6px 0 0; font-size: clamp(22px, 3vw, 28px);
+    line-height: 1.25; letter-spacing: -.01em;
+    padding-bottom: 12px; border-bottom: 2px solid var(--line);
+  }
+
+  .block {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px 26px; margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  .block h3 { margin: 0 0 4px; font-size: 17px; }
+  .block h4 { margin: 18px 0 6px; font-size: 15px; color: var(--accent); }
+  .block .src {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    color: var(--ink-soft); margin-bottom: 12px;
+  }
+
+  /* Platzhalter für noch zu befüllenden Inhalt */
+  .placeholder {
+    border: 1.5px dashed var(--line); border-radius: 8px;
+    padding: 14px 16px; color: var(--ink-soft); font-size: 14px;
+    background: var(--surface-2);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .placeholder::before { content: "✎"; color: var(--amber); flex-shrink: 0; }
+
+  /* Zusammenfassungs-Box */
+  .summary {
+    background: var(--accent-soft); border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0; padding: 14px 18px; margin-bottom: 18px;
+  }
+  .summary .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--accent);
+    display: block; margin-bottom: 4px;
+  }
+
+  /* Merksatz / Prüfungshinweis */
+  .hint {
+    background: var(--amber-soft); border-left: 4px solid var(--amber);
+    border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 14px 0; font-size: 14.5px;
+  }
+  .hint .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--amber);
+    display: block; margin-bottom: 3px;
+  }
+
+  /* Code-Block */
+  pre.code {
+    background: var(--code-bg); color: var(--code-ink);
+    border-radius: 8px; padding: 16px 18px; overflow-x: auto;
+    font-family: "IBM Plex Mono", monospace; font-size: 13.5px; line-height: 1.6;
+    margin: 12px 0;
+  }
+  pre.code .cm { color: #7f8b9b; }       /* Kommentar */
+  pre.code .kw { color: #e07070; }       /* Schlüsselwort */
+  pre.code .st { color: #e0a04a; }       /* String */
+  pre.code .ty { color: #a3d39b; }       /* Typ/Klasse */
+  code.inline {
+    font-family: "IBM Plex Mono", monospace; font-size: .9em;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 5px; padding: 1px 6px;
+  }
+
+  footer {
+    border-top: 1px solid var(--line); margin-top: 40px;
+    padding: 24px 0 0; font-size: 13px; color: var(--ink-soft);
+  }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 900px) {
+    #menuBtn { display: inline-flex; }
+    .sidebar {
+      position: fixed; left: 0; top: 64px; z-index: 40;
+      transform: translateX(-105%); transition: transform .25s ease;
+      box-shadow: var(--shadow); width: min(86vw, 320px);
+    }
+    .sidebar.open { transform: translateX(0); }
+    main { padding-top: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= TOPBAR ================= -->
+<header class="topbar">
+  <button class="btn-ghost" id="menuBtn" aria-label="Navigation öffnen">☰</button>
+  <div class="brand">
+    <span class="brand-kicker">prog2 / teil-1</span>
+    <span class="brand-title">Programmierung 2 – Java (fortgeschritten)</span>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn-ghost" id="themeBtn" aria-label="Farbschema wechseln">◐ Theme</button>
+</header>
+
+<div class="layout">
+
+<!-- ================= SIDEBAR / NAVIGATION ================= -->
+<nav class="sidebar" id="sidebar" aria-label="Kapitelnavigation">
+  <div class="nav-label">Inhaltsverzeichnis</div>
+
+  <div class="nav-chapter">
+    <a href="#kap-01"><span class="nav-num">01</span> Einstieg in Java</a>
+    <ul class="nav-sub">
+      <li><a href="#k1-installation">Installation &amp; JDK</a></li>
+      <li><a href="#k1-struktur">Programmstruktur: Python vs. Java</a></li>
+      <li><a href="#k1-erzeugung">Programm-Erzeugung &amp; -Start</a></li>
+      <li><a href="#k1-api">Java-API</a></li>
+      <li><a href="#k1-variablen">Variablen, Datentypen, Operatoren</a></li>
+      <li><a href="#k1-kontroll">Kontrollstrukturen</a></li>
+      <li><a href="#k1-methoden">Methoden in Java</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-02"><span class="nav-num">02</span> OOP: Klassen &amp; Objekte</a>
+    <ul class="nav-sub">
+      <li><a href="#k2-objekte">Objekte in der OOP</a></li>
+      <li><a href="#k2-klassen">Klassen in Java</a></li>
+      <li><a href="#k2-sichtbarkeit">Sichtbarkeit (private, public, …)</a></li>
+      <li><a href="#k2-instanz">Instanz- vs. Klassenvariablen</a></li>
+      <li><a href="#k2-sammlungen">Arrays &amp; Listen aus Objekten</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-03"><span class="nav-num">03</span> Die Klasse String</a>
+    <ul class="nav-sub">
+      <li><a href="#k3-grundlagen">Grundlagen Strings</a></li>
+      <li><a href="#k3-operationen">Stringoperationen &amp; Methoden</a></li>
+      <li><a href="#k3-eigenschaften">Eigenschaften abfragen</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-04"><span class="nav-num">04</span> UML-Klassendiagramme – Teil 1</a>
+    <ul class="nav-sub">
+      <li><a href="#k4-darstellung">Einfache Klassendarstellungen</a></li>
+      <li><a href="#k4-beziehungen">Assoziation, Aggregation, Komposition</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-05"><span class="nav-num">05</span> Vererbungsbeziehungen</a>
+    <ul class="nav-sub">
+      <li><a href="#k5-wozu">Wozu Vererbung?</a></li>
+      <li><a href="#k5-einfach">Einfache Vererbung in Java</a></li>
+      <li><a href="#k5-polymorphie">Polymorphie</a></li>
+      <li><a href="#k5-object">Die Klasse Object</a></li>
+      <li><a href="#k5-ueberladen">Überladen vs. Überschreiben</a></li>
+      <li><a href="#k5-abstrakt">Abstrakte Klassen &amp; @Override</a></li>
+      <li><a href="#k5-interfaces">Interfaces</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-06"><span class="nav-num">06</span> Exceptions</a>
+    <ul class="nav-sub">
+      <li><a href="#k6-was">Was sind Exceptions?</a></li>
+      <li><a href="#k6-throw">throw &amp; throws</a></li>
+      <li><a href="#k6-try">try – catch – finally</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-07"><span class="nav-num">07</span> Einstieg Streams</a>
+    <ul class="nav-sub">
+      <li><a href="#k7-konzept">Stream-Konzept in Java</a></li>
+      <li><a href="#k7-datei">Dateizugriff mit Streams</a></li>
+      <li><a href="#k7-zoo">Klassenzoo der Streams</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-A"><span class="nav-num">A</span> Anhang: Operator-Prioritäten</a>
+  </div>
+
+  <div class="nav-label" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line);">Teil 2 – Fortgeschritten</div>
+
+  <div class="nav-chapter">
+    <a href="#kap-08"><span class="nav-num">08</span> Packages</a>
+    <ul class="nav-sub">
+      <li><a href="#k8-wozu">Wozu Packages?</a></li>
+      <li><a href="#k8-zuordnung">Zuordnung &amp; Syntax</a></li>
+      <li><a href="#k8-import">Import fremder Packages</a></li>
+      <li><a href="#k8-compilierung">Compilierung &amp; Klassenpfad</a></li>
+      <li><a href="#k8-uml">Packages in der UML</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-09"><span class="nav-num">09</span> Streams – Binär &amp; Objekte</a>
+    <ul class="nav-sub">
+      <li><a href="#k9-binaer">Binärorientierte Streams</a></li>
+      <li><a href="#k9-objekte">Objektserialisierung</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-10"><span class="nav-num">10</span> Generics</a>
+    <ul class="nav-sub">
+      <li><a href="#k10-wozu">Wozu Generics?</a></li>
+      <li><a href="#k10-einfach">Einfache Generics</a></li>
+      <li><a href="#k10-iterierbar">Iterierbare Generics</a></li>
+      <li><a href="#k10-wildcards">Wildcards</a></li>
+      <li><a href="#k10-collections">Collection-Framework</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-11"><span class="nav-num">11</span> Annotationen</a>
+    <ul class="nav-sub">
+      <li><a href="#k11-grundlagen">Was sind Annotationen?</a></li>
+      <li><a href="#k11-eigene">Eigene Annotationen</a></li>
+      <li><a href="#k11-reflections">Java-Reflections</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-chapter">
+    <a href="#kap-12"><span class="nav-num">12</span> Threads</a>
+    <ul class="nav-sub">
+      <li><a href="#k12-prozesse">Threads vs. Prozesse</a></li>
+      <li><a href="#k12-java">Threads in Java</a></li>
+      <li><a href="#k12-sync">Thread-Synchronisation</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HAUPTINHALT ================= -->
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <span class="eyebrow">Lernwebsite · Prüfungsvorbereitung</span>
+    <h1>Programmierung 2 · Teil&nbsp;1</h1>
+    <p class="lead">
+      Kompakte Zusammenfassungen und Erklärungen aller Kapitel des Vorlesungsskripts –
+      zum schnellen Nachschlagen beim Programmieren und Lernen.
+    </p>
+    <div class="meta-grid">
+      <div class="meta-card"><span class="k">Quelle</span>Skript „Programmierung 2, Teil 1“, Prof. Dr. Ute Matecki, Fakultät Informatik</div>
+      <div class="meta-card"><span class="k">Umfang</span>7 Kapitel + Anhang · Skriptseiten 2–459</div>
+      <div class="meta-card"><span class="k">Status</span>Gerüst erstellt – Inhalte werden kapitelweise befüllt</div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 01 ============ -->
+  <section class="chapter" id="kap-01">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 01 <span class="pages">· Skript S. 8–161</span></span>
+      <h2>Einstieg in Java</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Java ist eine streng <strong>objektorientierte</strong>, explizit typisierte Sprache. Im Unterschied zu Python muss jede Variable vor ihrer Nutzung mit einem festen Typ deklariert werden. Jedes Java-Programm besteht aus mindestens einer Klasse; der Einstiegspunkt ist immer <code class=”inline”>public static void main(String[] args)</code>. Der Quelltext wird mit <code class=”inline”>javac</code> zu Bytecode kompiliert und dann durch die Java-VM mit <code class=”inline”>java</code> ausgeführt.</p>
+    </div>
+
+    <div class=”block” id=”k1-installation”>
+      <h3>Installationsvoraussetzungen – das JDK</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Installationsvoraussetzungen”, S. 11–13</div>
+      <p>Zum Entwickeln von Java-Programmen wird das <strong>Java Development Kit (JDK)</strong> benötigt. Es enthält unter anderem:</p>
+      <ul>
+        <li><code class=”inline”>javac</code> – der Java-<strong>Compiler</strong>: wandelt den Quelltext (<code class=”inline”>.java</code>) in maschinenunabhängigen Bytecode (<code class=”inline”>.class</code>) um.</li>
+        <li><code class=”inline”>java</code> – die <strong>Java-Runtime-Environment (JRE)</strong>: führt den kompilierten Bytecode in der Java Virtual Machine (JVM) aus.</li>
+      </ul>
+      <p>Das aktuelle OpenJDK ist frei erhältlich. Für komfortables Entwickeln empfiehlt sich die IDE <strong>Eclipse</strong> (eclipse.org), die Editieren, Kompilieren und Starten in einer Oberfläche vereint.</p>
+    </div>
+
+    <div class=”block” id=”k1-struktur”>
+      <h3>Programmstruktur – Python vs. Java</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Programmstruktur”, S. 14–22</div>
+      <p>In Python genügt eine Abfolge von Anweisungen. In Java muss jeder Code in eine <strong>Klasse</strong> eingebettet sein. Blöcke werden mit geschweiften Klammern <code class=”inline”>{}</code> begrenzt – Einrückung ist in Java <em>konventionell</em>, aber nicht syntaktisch erzwungen (anders als in Python).</p>
+      <pre class=”code”><span class=”cm”>// Dateiname muss exakt dem Klassennamen entsprechen: Hello.java</span>
+<span class=”kw”>public class</span> <span class=”ty”>Hello</span> {
+    <span class=”cm”>// Einstiegspunkt des Programms – immer diese Signatur</span>
+    <span class=”kw”>public static void</span> main(<span class=”ty”>String</span>[] args) {
+        <span class=”ty”>System</span>.out.println(<span class=”st”>”Hello World!”</span>);
+    } <span class=”cm”>// end method main()</span>
+} <span class=”cm”>// end class Hello</span></pre>
+      <p><strong>Wichtige Regeln:</strong></p>
+      <ul>
+        <li>Die Programmdatei muss genauso heißen wie die Klasse (Groß-/Kleinschreibung beachten) und auf <code class=”inline”>.java</code> enden.</li>
+        <li>Mindestens eine Klasse muss eine <code class=”inline”>main()</code>-Methode besitzen – sie ist der Startpunkt des Programms.</li>
+        <li><code class=”inline”>main()</code> bekommt immer ein <code class=”inline”>String[]</code>-Array übergeben, das eventuelle Kommandozeilenparameter enthält.</li>
+      </ul>
+    </div>
+
+    <div class=”block” id=”k1-erzeugung”>
+      <h3>Programm-Erzeugung und -Start</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitte „Kommandozeile” &amp; „Eclipse”, S. 23–45</div>
+      <h4>Auf der Kommandozeile</h4>
+      <pre class=”code”><span class=”cm”>// 1. Schritt: Kompilieren (erzeugt Hello.class)</span>
+javac Hello.java
+
+<span class=”cm”>// 2. Schritt: Ausführen (Klassenname OHNE .class angeben!)</span>
+java Hello
+
+<span class=”cm”>// Mehrere Quelldateien auf einmal kompilieren:</span>
+javac *.java</pre>
+      <ul>
+        <li><code class=”inline”>javac</code> prüft die Syntax und erzeugt bei Erfolg die <code class=”inline”>.class</code>-Datei; bei Fehlern erscheint eine Meldung mit Zeilennummer.</li>
+        <li><code class=”inline”>java NameDerMainKlasse</code> startet das Programm in der JVM.</li>
+      </ul>
+      <h4>In Eclipse</h4>
+      <ul>
+        <li>Programme werden in <strong>Projekten</strong> organisiert, die in einem <strong>Workspace</strong>-Verzeichnis liegen.</li>
+        <li>Beim Speichern einer <code class=”inline”>.java</code>-Datei wird automatisch kompiliert. Syntaxfehler erscheinen sofort im Editor.</li>
+        <li>Das Starten erfolgt mit dem grünen Start-Pfeil (Run). Eclipse sucht automatisch nach der Klasse mit <code class=”inline”>main()</code>.</li>
+      </ul>
+    </div>
+
+    <div class=”block” id=”k1-api”>
+      <h3>Die Java-API</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Java-API”, S. 46–49</div>
+      <p><strong>API</strong> steht für <em>Application Programming Interface</em> – vorgefertigte Bibliotheken, die Entwicklern fertige Klassen und Algorithmen zur Verfügung stellen, ohne dass man alles selbst implementieren muss.</p>
+      <p>Die offizielle Java-API-Dokumentation ist eine HTML-Seite, die alle Standardklassen, ihre Methoden und deren Parameter beschreibt. Für eigene Klassen kann mit dem Tool <code class=”inline”>javadoc</code> eine solche Dokumentation automatisch erzeugt werden.</p>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        „Schauen Sie in die API!” ist ein zentraler Rat des Skripts. Viele typische Aufgaben – Stringverarbeitung, Dateioperationen, Collections – sind bereits in der Java-API gelöst. Man muss die Klassen und Methoden kennen, nicht auswendig lernen, aber wissen, wo man nachschlägt.
+      </div>
+    </div>
+
+    <div class=”block” id=”k1-variablen”>
+      <h3>Variablen, Datentypen und Operatoren</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Variablen, Datentypen und Operatoren”, S. 50–107</div>
+      <h4>Elementare Datentypen &amp; <code class=”inline”>final</code></h4>
+      <p>Java ist <strong>explizit typisiert</strong>: jede Variable muss vor ihrer Nutzung mit einem Datentyp deklariert werden (<code class=”inline”>int x = 5;</code>). Die wichtigsten elementaren (primitiven) Datentypen:</p>
+      <table style=”width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;”>
+        <thead><tr style=”border-bottom:2px solid var(--line);”>
+          <th style=”text-align:left;padding:5px 8px;font-family:'IBM Plex Mono',monospace;”>Typ</th>
+          <th style=”text-align:left;padding:5px 8px;”>Größe</th>
+          <th style=”text-align:left;padding:5px 8px;”>Wertebereich / Beschreibung</th>
+          <th style=”text-align:left;padding:5px 8px;”>Beispiel</th>
+        </tr></thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>byte</code></td><td style=”padding:5px 8px;”>8 Bit</td><td style=”padding:5px 8px;”>−128 … 127</td><td style=”padding:5px 8px;”><code class=”inline”>byte b = 2;</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>short</code></td><td style=”padding:5px 8px;”>16 Bit</td><td style=”padding:5px 8px;”>−32768 … 32767</td><td style=”padding:5px 8px;”><code class=”inline”>short s = 45;</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>int</code></td><td style=”padding:5px 8px;”>32 Bit</td><td style=”padding:5px 8px;”>ca. ±2 Mrd.</td><td style=”padding:5px 8px;”><code class=”inline”>int i = 5;</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>long</code></td><td style=”padding:5px 8px;”>64 Bit</td><td style=”padding:5px 8px;”>ca. ±9,2 · 10¹⁸</td><td style=”padding:5px 8px;”><code class=”inline”>long l = 1000L;</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>float</code></td><td style=”padding:5px 8px;”>32 Bit</td><td style=”padding:5px 8px;”>IEEE 754 Gleitkomma</td><td style=”padding:5px 8px;”><code class=”inline”>float f = 48.7f;</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>double</code></td><td style=”padding:5px 8px;”>64 Bit</td><td style=”padding:5px 8px;”>IEEE 754, höhere Genauigkeit</td><td style=”padding:5px 8px;”><code class=”inline”>double d = 55.7;</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>char</code></td><td style=”padding:5px 8px;”>16 Bit</td><td style=”padding:5px 8px;”>Unicode-Zeichen 0 … 65535</td><td style=”padding:5px 8px;”><code class=”inline”>char c = 'A';</code></td></tr>
+          <tr><td style=”padding:5px 8px;”><code class=”inline”>boolean</code></td><td style=”padding:5px 8px;”>–</td><td style=”padding:5px 8px;”><code class=”inline”>true</code> oder <code class=”inline”>false</code></td><td style=”padding:5px 8px;”><code class=”inline”>boolean ok = true;</code></td></tr>
+        </tbody>
+      </table>
+      <p>Mit dem Modifier <code class=”inline”>final</code> wird eine Variable zur <strong>Konstante</strong>: nach der ersten Zuweisung kann kein neuer Wert mehr gesetzt werden. Ein Versuch führt zum Compilerfehler:</p>
+      <pre class=”code”><span class=”kw”>final double</span> PI = 3.141592653589793;
+PI = 9.0; <span class=”cm”>// Compilerfehler! PI ist final.</span></pre>
+
+      <h4>Referenzdatentypen: Arrays, mehrdimensionale Arrays, Strings, Klassen</h4>
+      <p>Aggregierte (zusammengesetzte) Datentypen wie Arrays, Klassen und Strings sind <strong>Referenztypen</strong>: die Variable speichert nicht die Daten selbst, sondern eine <em>Referenz</em> (Speicheradresse) auf den Bereich, in dem die eigentlichen Daten liegen.</p>
+      <pre class=”code”><span class=”cm”>// Array – Möglichkeit 1: new</span>
+<span class=”kw”>int</span>[] myArray = <span class=”kw”>new int</span>[4];
+myArray[0] = 7; myArray[1] = -99; myArray[2] = 102; myArray[3] = 8;
+
+<span class=”cm”>// Array – Möglichkeit 2: Literal</span>
+<span class=”kw”>int</span>[] myArray2 = {7, -99, 102, 8};
+
+<span class=”cm”>// Länge: array.length (Variable, keine Methode!)</span>
+<span class=”ty”>System</span>.out.println(myArray.length); <span class=”cm”>// 4</span>
+
+<span class=”cm”>// Zweidimensionales Array (Matrix)</span>
+<span class=”kw”>int</span>[][] matrix = <span class=”kw”>new int</span>[3][5];
+matrix[2][3] = 255;</pre>
+      <p>Die <strong>null-Referenz</strong> bedeutet: Variable ist noch nicht mit einer gültigen Adresse initialisiert. Wird eine nicht-initialisierte Referenz dereferenziert, entsteht zur Laufzeit eine <code class=”inline”>NullPointerException</code>:</p>
+      <pre class=”code”><span class=”kw”>int</span>[] array = <span class=”kw”>null</span>;
+<span class=”kw”>if</span> (array != <span class=”kw”>null</span>) {
+    array[0] = -99; <span class=”cm”>// sicher: erst testen, dann zugreifen</span>
+}</pre>
+
+      <h4>Operatoren &amp; Typkonvertierung – Python vs. Java</h4>
+      <p>Arithmetik- (<code class=”inline”>+ - * / %</code>), Vergleichs- (<code class=”inline”>== != &lt; &gt; &lt;= &gt;=</code>) und Logik-Operatoren (<code class=”inline”>&amp;&amp; || !</code>) sind fast identisch mit Python. Neu in Java: <strong>Inkrement/Dekrement</strong>-Operatoren:</p>
+      <pre class=”code”>i++;   <span class=”cm”>// Post-Inkrement: erst i verwenden, dann hochzählen</span>
+++i;   <span class=”cm”>// Pre-Inkrement:  erst hochzählen, dann i verwenden</span>
+j--;   <span class=”cm”>// Dekrement analog</span></pre>
+      <p><strong>Typkonvertierung (Typecast):</strong> Java konvertiert automatisch von „kleinem” zu „großem” Typ (impliziter Cast, z.&nbsp;B. <code class=”inline”>int → long</code>). In die andere Richtung muss explizit gecastet werden:</p>
+      <pre class=”code”><span class=”kw”>short</span> a = 50, b = 70;
+<span class=”kw”>short</span> ergebnis = (<span class=”kw”>short</span>) (a * b); <span class=”cm”>// expliziter Cast: int-Ergebnis → short</span></pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Operationen auf <code class=”inline”>byte</code>, <code class=”inline”>short</code> oder <code class=”inline”>char</code> liefern immer ein <code class=”inline”>int</code>-Ergebnis! Das direkte Zuweisen an eine <code class=”inline”>short</code>-Variable führt zum Compilerfehler, solange kein expliziter Cast geschrieben wird.
+      </div>
+
+      <h4>Sichtbarkeit von Variablen – Teil 1</h4>
+      <p>In Java gibt es drei Gültigkeitsbereiche (Scopes):</p>
+      <ul>
+        <li><strong>Lokale Variablen:</strong> nur innerhalb der Methode/des Blocks sichtbar, in dem sie definiert wurden.</li>
+        <li><strong>Instanzvariablen (Objektvariablen):</strong> innerhalb aller Methoden <em>eines</em> Objekts sichtbar; jedes Objekt hat seine eigene Instanz dieser Variable.</li>
+        <li><strong>Klassenvariablen (<code class=”inline”>static</code>):</strong> existieren einmal für die gesamte Klasse, unabhängig davon, wie viele Objekte erzeugt wurden.</li>
+      </ul>
+      <p>Wenn eine lokale Variable den gleichen Namen wie eine Instanzvariable hat, überlagert sie diese. Mit <code class=”inline”>this.variablenname</code> kann explizit auf die Instanzvariable zugegriffen werden.</p>
+    </div>
+
+    <div class=”block” id=”k1-kontroll”>
+      <h3>Kontrollstrukturen</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Kontrollstrukturen”, S. 108–147</div>
+      <h4>Fallunterscheidungen</h4>
+      <pre class=”code”><span class=”cm”>// if – else if – else: für komplexere Bedingungen &amp; Wertebereiche</span>
+<span class=”kw”>if</span> (wert &gt;= 0 &amp;&amp; wert &lt;= 5) {
+    <span class=”ty”>System</span>.out.println(<span class=”st”>”Zwischen 0 und 5”</span>);
+} <span class=”kw”>else if</span> (wert &gt;= 6 &amp;&amp; wert &lt;= 10) {
+    <span class=”ty”>System</span>.out.println(<span class=”st”>”Zwischen 6 und 10”</span>);
+} <span class=”kw”>else</span> {
+    <span class=”ty”>System</span>.out.println(<span class=”st”>”Außerhalb!”</span>);
+}
+
+<span class=”cm”>// switch-case: für konstante Einzelwerte (seit Java 7 auch Strings)</span>
+<span class=”kw”>switch</span> (wert) {
+    <span class=”kw”>case</span> 1: <span class=”ty”>System</span>.out.println(<span class=”st”>”Eins”</span>); <span class=”kw”>break</span>;
+    <span class=”kw”>case</span> 2: <span class=”ty”>System</span>.out.println(<span class=”st”>”Zwei”</span>); <span class=”kw”>break</span>;
+    <span class=”kw”>default</span>: <span class=”ty”>System</span>.out.println(<span class=”st”>”Anderes”</span>); <span class=”kw”>break</span>;
+}</pre>
+      <h4>Schleifen</h4>
+      <pre class=”code”><span class=”cm”>// while: kopfgesteuert – Bedingung wird VOR dem ersten Durchlauf geprüft</span>
+<span class=”kw”>while</span> (zahl &gt;= 1 &amp;&amp; zahl &lt;= 10) { zahl = eingabe.nextInt(); }
+
+<span class=”cm”>// for als Zählschleife</span>
+<span class=”kw”>for</span> (<span class=”kw”>int</span> i = 1; i &lt;= 10; i++) { <span class=”ty”>System</span>.out.println(i); }
+
+<span class=”cm”>// for als Iterationsschleife (foreach) über ein Array oder eine Liste</span>
+<span class=”kw”>for</span> (<span class=”kw”>int</span> wert : zahlenArray) { <span class=”ty”>System</span>.out.println(wert); }
+
+<span class=”cm”>// do-while: fußgesteuert – Rumpf wird MINDESTENS EINMAL ausgeführt</span>
+<span class=”kw”>do</span> {
+    zahl = eingabe.nextInt();
+} <span class=”kw”>while</span> (zahl &gt;= 1 &amp;&amp; zahl &lt;= 10);</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Im <code class=”inline”>switch</code>-Block fehlendes <code class=”inline”>break</code> führt zum <strong>Fall-through</strong>: der Code der folgenden Cases wird ebenfalls ausgeführt, bis ein <code class=”inline”>break</code> oder das Ende des <code class=”inline”>switch</code> erreicht wird! Dieses Verhalten ist manchmal gewollt (Wertebereiche), aber oft ein Bug. Die <code class=”inline”>do-while</code>-Schleife eignet sich immer dann, wenn der Schleifenrumpf <em>mindestens einmal</em> durchlaufen werden soll (z.&nbsp;B. Eingabevalidierung).
+      </div>
+    </div>
+
+    <div class=”block” id=”k1-methoden”>
+      <h3>Methoden in Java</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Methoden in Java”, S. 148–161</div>
+      <p>Methoden sind in sich abgeschlossene Unteraufgaben innerhalb einer Klasse. In Java können Funktionen <em>nur innerhalb von Klassen</em> definiert werden – daher heißen sie hier Methoden. Die Typisierung von Parametern und Rückgabewert ist immer <strong>explizit</strong>.</p>
+      <pre class=”code”><span class=”cm”>// Methode ohne Rückgabe: Rückgabetyp void</span>
+<span class=”kw”>void</span> sagHallo(<span class=”ty”>String</span> name) {
+    <span class=”ty”>System</span>.out.println(<span class=”st”>”Hallo “</span> + name);
+}
+
+<span class=”cm”>// Methode mit Rückgabe: Rückgabetyp und return-Statement</span>
+<span class=”kw”>int</span> altersBerechnung(<span class=”kw”>int</span> alter) {
+    <span class=”kw”>int</span> ergebnis = alter - 18;
+    <span class=”kw”>return</span> ergebnis;
+}</pre>
+      <p>Die <strong>Signatur</strong> einer Methode ist der Methodenkopf <em>ohne</em> Rückgabetyp (z.&nbsp;B. <code class=”inline”>sagHallo(String name)</code>). Sie wird beim Überladen von Methoden benötigt.</p>
+      <p><strong>Parameterübergabe:</strong></p>
+      <ul>
+        <li><strong>Call-by-value</strong> (elementare Typen): Es wird eine Kopie des Wertes übergeben. Die Originalvariable in der aufrufenden Methode bleibt unverändert.</li>
+        <li><strong>Call-by-reference</strong> (Referenztypen): Es wird die Adresse des Objekts übergeben. Beide Methoden arbeiten mit demselben Objekt auf dem Heap.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 02 ============ -->
+  <section class="chapter" id="kap-02">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 02 <span class="pages">· Skript S. 162–232</span></span>
+      <h2>Einstieg in die OOP: Klassen und Objekte/Instanzen</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Objekte sind konkrete Ausprägungen (Instanzen) einer Klasse. Klassen sind <strong>Baupläne</strong>, die Attribute (Zustand) und Methoden (Verhalten) von Objekten beschreiben. Objekte werden mit <code class=”inline”>new</code> im Heap erzeugt; die Variable enthält nur die Referenz (Adresse) auf das Objekt. Das Prinzip des <strong>Information Hiding</strong> schreibt vor, Attribute als <code class=”inline”>private</code> zu deklarieren und den Zugriff über öffentliche getter/setter-Methoden zu kontrollieren.</p>
+    </div>
+
+    <div class=”block” id=”k2-objekte”>
+      <h3>Objekte in der OOP</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Objekte in der OOP”, S. 164</div>
+      <p>Die objektorientierte Programmierung modelliert die reale Welt in Form von <strong>Objekten</strong>. Jedes Objekt hat:</p>
+      <ul>
+        <li><strong>Attribute</strong> – beschreiben den Zustand (z.&nbsp;B. Farbe, Name, Wert).</li>
+        <li><strong>Methoden</strong> – beschreiben das Verhalten (z.&nbsp;B. fahren, drucken, berechnen).</li>
+      </ul>
+      <p>Beispiele für Objekte: ein grün lackierter Mini, ein Buch mit Titel „Grauen der OOP”, ein Besatzungsmitglied namens Spock. Die Klasse „Buch” wäre der Bauplan; ein konkretes Buch ist eine <strong>Instanz</strong> dieses Bauplans.</p>
+    </div>
+
+    <div class=”block” id=”k2-klassen”>
+      <h3>Klassen in Java: Vereinbarung, Konstruktoren, Objekterzeugung</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitte „Klassen in Java” &amp; „Vereinbarung von Klassen”, S. 165–183</div>
+      <pre class=”code”><span class=”kw”>public class</span> <span class=”ty”>Buch</span> {
+    <span class=”cm”>// Attribute (private: kein Direktzugriff von außen)</span>
+    <span class=”kw”>private</span> <span class=”ty”>String</span> autor;
+    <span class=”kw”>private</span> <span class=”ty”>String</span> titel;
+    <span class=”kw”>private int</span>    auflage;
+
+    <span class=”cm”>// Standardkonstruktor (parameterlos) – setzt Standardwerte</span>
+    <span class=”kw”>public</span> <span class=”ty”>Buch</span>() {
+        autor   = <span class=”st”>”Hugo Helmchen”</span>;
+        titel   = <span class=”st”>”Allein im Weltraum”</span>;
+        auflage = 1;
+    }
+
+    <span class=”cm”>// Voll qualifizierter Konstruktor – setzt alle Attribute via Parameter</span>
+    <span class=”kw”>public</span> <span class=”ty”>Buch</span>(<span class=”ty”>String</span> autor, <span class=”ty”>String</span> titel, <span class=”kw”>int</span> auflage) {
+        <span class=”cm”>// this = Referenz auf dieses Objekt (wie self in Python)</span>
+        <span class=”kw”>this</span>.autor   = autor;
+        <span class=”kw”>this</span>.titel   = titel;
+        <span class=”kw”>this</span>.auflage = auflage;
+    }
+
+    <span class=”cm”>// getter-Methode – Attribut lesen</span>
+    <span class=”kw”>public</span> <span class=”ty”>String</span> getAutor()  { <span class=”kw”>return</span> autor; }
+    <span class=”kw”>public</span> <span class=”ty”>String</span> getTitel()  { <span class=”kw”>return</span> titel; }
+    <span class=”kw”>public int</span>    getAuflage(){ <span class=”kw”>return</span> auflage; }
+
+    <span class=”cm”>// setter-Methode – Attribut (kontrolliert) ändern</span>
+    <span class=”kw”>public void</span> setAuflage(<span class=”kw”>int</span> auflage) { <span class=”kw”>this</span>.auflage = auflage; }
+} <span class=”cm”>// end class</span></pre>
+      <pre class=”code”><span class=”cm”>// Objekterzeugung mit new – Objekt liegt auf dem Heap</span>
+<span class=”ty”>Buch</span> b1 = <span class=”kw”>new</span> <span class=”ty”>Buch</span>(<span class=”st”>”G. Grusel”</span>, <span class=”st”>”Grauen der OOP”</span>, 5);
+<span class=”ty”>Buch</span> b2 = <span class=”kw”>new</span> <span class=”ty”>Buch</span>(); <span class=”cm”>// Standardkonstruktor</span>
+
+<span class=”cm”>// Zugriff über Punkt-Operator</span>
+<span class=”ty”>String</span> aut = b1.getAutor();
+b1.setAuflage(6);
+b1.getAuflage(); <span class=”cm”>// gibt 6 zurück</span></pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Konstruktoren haben <strong>keinen Rückgabetyp</strong> – nicht einmal <code class=”inline”>void</code>! Sie heißen genau wie die Klasse. Wird kein expliziter Konstruktor definiert, stellt Java automatisch einen parameterlosen Standard-Konstruktor bereit (der aber entfällt, sobald ein eigener Konstruktor geschrieben wird).
+      </div>
+    </div>
+
+    <div class=”block” id=”k2-sichtbarkeit”>
+      <h3>Sichtbarkeit: private, public, protected, package</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Sichtbarkeit von Variablen und Methoden”, S. 185–203</div>
+      <p>Sichtbarkeitsmodifizierer steuern, welche Klassen auf Attribute und Methoden eines Objekts zugreifen dürfen. Das Prinzip des <strong>Information Hiding</strong> schreibt vor, Attribute immer <code class=”inline”>private</code> und nur die benötigte Schnittstelle <code class=”inline”>public</code> zu machen:</p>
+      <table style=”width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;”>
+        <thead><tr style=”border-bottom:2px solid var(--line);”>
+          <th style=”text-align:left;padding:5px 8px;font-family:'IBM Plex Mono',monospace;”>Modifier</th>
+          <th style=”text-align:left;padding:5px 8px;”>Sichtbar für …</th>
+        </tr></thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>public</code></td><td style=”padding:5px 8px;”>Alle Klassen überall (auch in anderen Packages)</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>private</code></td><td style=”padding:5px 8px;”>Nur innerhalb der eigenen Klasse – von außen vollständig verborgen</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>protected</code></td><td style=”padding:5px 8px;”>Eigene Klasse + Kindklassen + Klassen im gleichen Package</td></tr>
+          <tr><td style=”padding:5px 8px;”><em>(kein Modifier)</em></td><td style=”padding:5px 8px;”>Nur Klassen im gleichen Package (Package-Sichtbarkeit)</td></tr>
+        </tbody>
+      </table>
+      <p>Best Practice: Attribute immer <code class=”inline”>private</code>; Getter und Setter <code class=”inline”>public</code>. So kann die interne Implementierung geändert werden, ohne dass äußerer Code angepasst werden muss.</p>
+    </div>
+
+    <div class=”block” id=”k2-instanz”>
+      <h3>Instanzvariablen/-methoden vs. Klassenvariablen/-methoden (static)</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Instanzvariablen vs. Klassenvariablen”, S. 204–218</div>
+      <p><strong>Instanzvariablen/-methoden</strong> gehören zu einem konkreten Objekt. Bei 3 erzeugten Objekten existieren 3 eigene Kopien der Instanzvariablen. Zugriff immer über eine Objektreferenz: <code class=”inline”>obj.methode()</code>.</p>
+      <p><strong>Klassenvariablen/-methoden</strong> sind mit dem Modifier <code class=”inline”>static</code> gekennzeichnet. Sie existieren <em>einmal</em> für die gesamte Klasse, egal wie viele Objekte erzeugt werden. Zugriff direkt über den Klassennamen: <code class=”inline”>KlassenName.variable</code>.</p>
+      <pre class=”code”><span class=”cm”>// Sinnvolles Beispiel: statische Konstante + statische Methode</span>
+<span class=”kw”>public class</span> <span class=”ty”>StaticOk</span> {
+    <span class=”kw”>static final double</span> KELVIN_NULL = -273.15; <span class=”cm”>// Klassenkonstante</span>
+
+    <span class=”kw”>static double</span> gradCelsius(<span class=”kw”>double</span> kelvin) { <span class=”cm”>// Klassenmethode</span>
+        <span class=”kw”>return</span> kelvin + KELVIN_NULL;
+    }
+}
+
+<span class=”cm”>// Aufruf direkt über Klassennamen – kein Objekt nötig:</span>
+<span class=”kw”>double</span> c = <span class=”ty”>StaticOk</span>.gradCelsius(300.0);</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Statische Methoden können <strong>nicht</strong> auf Instanzvariablen zugreifen! Sie kennen kein <code class=”inline”>this</code>. Das macht Sinn: eine Klassenmethode läuft ohne konkretes Objekt – welches <code class=”inline”>this</code> sollte es referenzieren?
+      </div>
+    </div>
+
+    <div class=”block” id=”k2-sammlungen”>
+      <h3>Arrays und Listen aus Objekten/Instanzen</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitte „Arrays aus Objekten” &amp; „Listen aus Objekten”, S. 219–232</div>
+      <p><strong>Objekt-Arrays</strong> – drei Schritte:</p>
+      <pre class=”code”><span class=”cm”>// 1. Array-Referenz erzeugen (enthält noch keine Objekte!)</span>
+<span class=”ty”>Person</span>[] personen = <span class=”kw”>new</span> <span class=”ty”>Person</span>[3];
+
+<span class=”kw”>for</span> (<span class=”kw”>int</span> i = 0; i &lt; personen.length; i++) {
+    <span class=”ty”>String</span> name = tastatur.nextLine();
+    <span class=”ty”>Person</span> p    = <span class=”kw”>new</span> <span class=”ty”>Person</span>(name); <span class=”cm”>// 2. Instanz erzeugen</span>
+    personen[i] = p;                <span class=”cm”>// 3. Ins Array einhängen</span>
+}</pre>
+      <p><strong>ArrayList</strong> – dynamisch wachsend, nur Referenztypen (keine primitiven Typen):</p>
+      <pre class=”code”><span class=”kw”>import</span> java.util.ArrayList;
+
+<span class=”ty”>ArrayList</span>&lt;<span class=”ty”>Person</span>&gt; liste = <span class=”kw”>new</span> <span class=”ty”>ArrayList</span>&lt;<span class=”ty”>Person</span>&gt;();
+
+<span class=”cm”>// Einfügen</span>
+liste.add(<span class=”kw”>new</span> <span class=”ty”>Person</span>(<span class=”st”>”Erna”</span>));
+liste.add(<span class=”kw”>new</span> <span class=”ty”>Person</span>(<span class=”st”>”Hugo”</span>));
+
+<span class=”cm”>// Zugriff per Index (wie Array) oder foreach</span>
+<span class=”ty”>Person</span> p = liste.get(0);
+<span class=”kw”>for</span> (<span class=”ty”>Person</span> x : liste) { <span class=”ty”>System</span>.out.println(x.getName()); }</pre>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 03 ============ -->
+  <section class="chapter" id="kap-03">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 03 <span class="pages">· Skript S. 233–260</span></span>
+      <h2>Die Klasse String</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Die Klasse <code class=”inline”>String</code> kapselt Zeichenfolgen aus 16-Bit-Unicode-Zeichen. Strings sind in Java <strong>unveränderliche Objekte</strong> (immutable): jede scheinbare Änderung erzeugt intern ein neues String-Objekt. Der <code class=”inline”>==</code>-Operator vergleicht nur Adressen, nicht Inhalte – zum inhaltlichen Vergleich muss <code class=”inline”>equals()</code> verwendet werden. Die Klasse String bietet eine umfangreiche API zum Suchen, Zuschneiden und Konvertieren von Zeichenketten.</p>
+    </div>
+
+    <div class=”block” id=”k3-grundlagen”>
+      <h3>Grundlagen: char und String</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Grundlagen Strings”, S. 235–236</div>
+      <p>Der primitive Datentyp <code class=”inline”>char</code> ist 16 Bit groß und kann ein einzelnes Unicode-Zeichen aufnehmen (Wertebereich 0–65535; das Zeichen 'A' hat z.&nbsp;B. den Wert 65, wie in ASCII). Zeichenliterale stehen in einfachen Anführungszeichen.</p>
+      <p>Die Klasse <code class=”inline”>String</code> speichert Zeichenfolgen und stellt viele Methoden zur Verarbeitung bereit. String-Literale stehen in doppelten Anführungszeichen:</p>
+      <pre class=”code”><span class=”kw”>char</span> x = <span class=”st”>'M'</span>;               <span class=”cm”>// einzelnes Zeichen (einfache Anführungszeichen)</span>
+<span class=”ty”>String</span> s = <span class=”st”>”Erna Etepetete”</span>; <span class=”cm”>// Zuweisung eines String-Literals</span>
+<span class=”ty”>String</span> t = <span class=”kw”>new</span> <span class=”ty”>String</span>(<span class=”st”>”Hugo Helmchen”</span>); <span class=”cm”>// Konstruktor-Variante</span></pre>
+    </div>
+
+    <div class=”block” id=”k3-operationen”>
+      <h3>Stringoperationen &amp; wichtigste Methoden</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitte „Stringoperationen” &amp; „Wichtigste Methoden der Klasse String”, S. 237–260</div>
+      <h4>Konkatenation</h4>
+      <pre class=”code”><span class=”ty”>String</span> s1 = <span class=”st”>”Hallo “</span>;
+<span class=”ty”>String</span> s2 = <span class=”st”>”Welt”</span>;
+<span class=”ty”>String</span> s3 = s1 + s2 + 2; <span class=”cm”>// “Hallo Welt2” – + verkettet Strings</span>
+s1 += s2;                 <span class=”cm”>// Kurzschreibweise für s1 = s1 + s2</span></pre>
+      <h4>Vergleich – equals() statt ==</h4>
+      <pre class=”code”><span class=”ty”>String</span> s = <span class=”st”>”Erna”</span>;
+<span class=”ty”>String</span> t = <span class=”kw”>new</span> <span class=”ty”>String</span>(<span class=”st”>”Erna”</span>);
+
+<span class=”cm”>// FALSCH: == vergleicht nur Adressen!</span>
+<span class=”kw”>if</span> (s == t)      { ... } <span class=”cm”>// liefert false, obwohl Inhalt gleich ist</span>
+
+<span class=”cm”>// RICHTIG: equals() vergleicht den Inhalt</span>
+<span class=”kw”>if</span> (s.equals(t)) { ... } <span class=”cm”>// liefert true</span>
+
+<span class=”cm”>// Alternative: switch-case (seit Java 7 mit String erlaubt)</span>
+<span class=”kw”>switch</span> (t) {
+    <span class=”kw”>case</span> <span class=”st”>”Erna”</span>: <span class=”ty”>System</span>.out.println(<span class=”st”>”Hallo Erna!”</span>); <span class=”kw”>break</span>;
+}</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        <code class=”inline”>==</code> bei Strings ist ein <strong>klassischer Fehler</strong> in Java! Wenn zwei String-Literale denselben Wert haben, kann <code class=”inline”>==</code> zufällig <code class=”inline”>true</code> liefern (Java hält gleichartige Literale im Speicher-Pool), aber sobald ein String per <code class=”inline”>new</code> erzeugt wird, verweist er auf eine andere Adresse → <code class=”inline”>==</code> ergibt <code class=”inline”>false</code>. Immer <code class=”inline”>equals()</code> verwenden!
+      </div>
+      <h4>Wichtigste Methoden im Überblick</h4>
+      <table style=”width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;”>
+        <thead><tr style=”border-bottom:2px solid var(--line);”>
+          <th style=”text-align:left;padding:5px 8px;font-family:'IBM Plex Mono',monospace;”>Methode</th>
+          <th style=”text-align:left;padding:5px 8px;”>Beschreibung</th>
+        </tr></thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>length()</code></td><td style=”padding:5px 8px;”>Anzahl der Zeichen im String (Achtung: Methode, nicht Variable wie bei Arrays!)</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>isEmpty()</code></td><td style=”padding:5px 8px;”><code class=”inline”>true</code>, wenn der String leer ist (<code class=”inline”>length() == 0</code>)</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>charAt(int pos)</code></td><td style=”padding:5px 8px;”>Gibt das Zeichen an Position <code class=”inline”>pos</code> zurück</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>indexOf(char c)</code></td><td style=”padding:5px 8px;”>Position des ersten Vorkommens von <code class=”inline”>c</code>; −1 wenn nicht gefunden</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>indexOf(String s, int pos)</code></td><td style=”padding:5px 8px;”>Erstes Vorkommen von <code class=”inline”>s</code> ab Position <code class=”inline”>pos</code>; −1 wenn nicht gefunden</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>substring(int p1)</code></td><td style=”padding:5px 8px;”>Teilstring ab Position <code class=”inline”>p1</code> bis zum Ende</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>substring(int p1, int p2)</code></td><td style=”padding:5px 8px;”>Teilstring von <code class=”inline”>p1</code> bis <em>vor</em> <code class=”inline”>p2</code></td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>startsWith(String s)</code></td><td style=”padding:5px 8px;”>Prüft, ob der String mit <code class=”inline”>s</code> beginnt</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>endsWith(String s)</code></td><td style=”padding:5px 8px;”>Prüft, ob der String mit <code class=”inline”>s</code> endet</td></tr>
+          <tr style=”border-bottom:1px solid var(--line);”><td style=”padding:5px 8px;”><code class=”inline”>String.valueOf(wert)</code></td><td style=”padding:5px 8px;”>Statisch: konvertiert elementaren Datentyp → String</td></tr>
+          <tr><td style=”padding:5px 8px;”><code class=”inline”>Integer.parseInt(s)</code></td><td style=”padding:5px 8px;”>Statisch (Wrapper-Klasse): konvertiert String → <code class=”inline”>int</code></td></tr>
+        </tbody>
+      </table>
+      <pre class=”code”><span class=”ty”>String</span> s1 = <span class=”st”>”Beim Flachdach ist das Dach flach”</span>;
+<span class=”cm”>// indexOf: 'A' (Großbuchstabe) kommt nicht vor → −1</span>
+<span class=”kw”>int</span> pos1 = s1.indexOf(<span class=”st”>'A'</span>);              <span class=”cm”>// −1</span>
+<span class=”cm”>// “dach” ab Position 5 → erste Fundstelle ab Index 5 ist 10</span>
+<span class=”kw”>int</span> pos2 = s1.indexOf(<span class=”st”>”dach”</span>, 5);        <span class=”cm”>// 10</span>
+<span class=”cm”>// Teilstring zwischen Index 2 und vor Index 6: “im F”</span>
+<span class=”ty”>String</span> s3 = s1.substring(2, 6);           <span class=”cm”>// “im F”</span>
+
+<span class=”cm”>// Konvertierung: int ↔ String</span>
+<span class=”ty”>String</span> iStr = <span class=”ty”>String</span>.valueOf(12);         <span class=”cm”>// “12”</span>
+<span class=”kw”>int</span>    iNum = <span class=”ty”>Integer</span>.parseInt(<span class=”st”>”345”</span>);   <span class=”cm”>// 345</span></pre>
+    </div>
+
+    <div class=”block” id=”k3-eigenschaften”>
+      <h3>Eigenschaften von Strings abfragen</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Eigenschaften von Strings abfragen”, S. 249–251</div>
+      <p>Zur Überprüfung von String-Eigenschaften stehen u.&nbsp;a. folgende Methoden zur Verfügung:</p>
+      <pre class=”code”><span class=”ty”>String</span> s = <span class=”kw”>new</span> <span class=”ty”>String</span>(<span class=”st”>”Hallo”</span>);
+
+s.length();           <span class=”cm”>// 5 – Länge (Methode, nicht .length wie bei Arrays!)</span>
+s.isEmpty();          <span class=”cm”>// false – ist leer?</span>
+s.charAt(1);          <span class=”cm”>// 'a' – Zeichen an Position 1</span>
+s.startsWith(<span class=”st”>”Ha”</span>);  <span class=”cm”>// true</span>
+s.endsWith(<span class=”st”>”lo”</span>);    <span class=”cm”>// true</span>
+s.equals(<span class=”st”>”Hallo”</span>);  <span class=”cm”>// true – inhaltlicher Vergleich</span></pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Die Länge eines <strong>Strings</strong> wird mit <code class=”inline”>s.length()</code> (Methode, mit runden Klammern) abgefragt. Die Länge eines <strong>Arrays</strong> mit <code class=”inline”>arr.length</code> (Variable, <em>ohne</em> runde Klammern). Dieser Unterschied ist ein häufiger Fehler in Klausuren!
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 04 ============ -->
+  <section class="chapter" id="kap-04">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 04 <span class="pages">· Skript S. 261–281</span></span>
+      <h2>UML-Klassendiagramme – Teil 1</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>UML (Unified Modeling Language) ermöglicht die <strong>grafische Darstellung</strong> von Klassen und deren Beziehungen – kompakter und übersichtlicher als reiner Java-Code. Ein UML-Klassendiagramm zeigt in drei Blöcken: Klassenname, Attribute (mit Typ und Sichtbarkeit) und Methoden (mit Parametern und Rückgabetyp). Beziehungen zwischen Klassen – Assoziation, Aggregation, Komposition – werden durch verschiedene Linientypen und Pfeilspitzen dargestellt.</p>
+    </div>
+
+    <div class=”block” id=”k4-darstellung”>
+      <h3>Einfache Klassendarstellungen</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Einfache Klassendarstellungen”, S. 263–270</div>
+      <p>Eine Klasse wird als Rechteck mit <strong>drei Blöcken</strong> dargestellt:</p>
+      <ul>
+        <li><strong>Oben:</strong> Klassenname</li>
+        <li><strong>Mitte:</strong> Attribute – Format: <code class=”inline”>Sichtbarkeit name: Typ</code></li>
+        <li><strong>Unten:</strong> Methoden und Konstruktoren – Format: <code class=”inline”>Sichtbarkeit methode(param: Typ): RückgabeTyp</code></li>
+      </ul>
+      <p>Sichtbarkeiten werden als Symbole geschrieben: <code class=”inline”>+</code> = public, <code class=”inline”>-</code> = private, <code class=”inline”>#</code> = protected. Achtung: In UML steht der Typ <em>nach</em> dem Bezeichner (getrennt durch Doppelpunkt) – anders als in Java.</p>
+      <pre class=”code”><span class=”cm”>// UML-Notation (vereinfacht als Text dargestellt):</span>
+<span class=”cm”>// ┌──────────────────────────────────────────────┐</span>
+<span class=”cm”>// │                    Buch1                     │</span>
+<span class=”cm”>// ├──────────────────────────────────────────────┤</span>
+<span class=”cm”>// │  - autor   : String                          │</span>
+<span class=”cm”>// │  - titel   : String                          │</span>
+<span class=”cm”>// │  - auflage : int                             │</span>
+<span class=”cm”>// ├──────────────────────────────────────────────┤</span>
+<span class=”cm”>// │  + Buch1(autor: String, titel: String, ...)  │</span>
+<span class=”cm”>// │  + getAutor()   : String                     │</span>
+<span class=”cm”>// │  + getTitel()   : String                     │</span>
+<span class=”cm”>// │  + getAuflage() : int                        │</span>
+<span class=”cm”>// │  + setAuflage(auflage: int) : void           │</span>
+<span class=”cm”>// └──────────────────────────────────────────────┘</span></pre>
+      <p>In einer reduzierten Darstellung können Konstruktoren, getter und setter weggelassen werden – dann erscheinen nur die „echten” fachlichen Methoden im unteren Block.</p>
+    </div>
+
+    <div class=”block” id=”k4-beziehungen”>
+      <h3>Klassenbeziehungen: Assoziation, Aggregation, Komposition</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Klassenbeziehungen – Teil 1”, S. 271–281</div>
+      <h4>Assoziation</h4>
+      <p>Die allgemeinste Beziehung: Objekte zweier Klassen kennen sich gegenseitig oder einseitig. Dargestellt als Linie, oft mit Pfeilspitze (Richtung des Zugriffs) und <strong>Multiplizitäten</strong> an den Enden:</p>
+      <ul>
+        <li><code class=”inline”>1</code> – genau ein Objekt</li>
+        <li><code class=”inline”>1..*</code> – ein oder mehrere Objekte</li>
+        <li><code class=”inline”>0..*</code> – null oder mehrere (optional)</li>
+      </ul>
+      <p>Beispiel: Ein Leser liest zu einer Zeit genau 1 Buch (1:1). Ein Leser kann 0 bis viele Bücher besitzen (1:0..*). Die offene Pfeilspitze zeigt, wer auf wen Zugriff hat; ein Dreieck über dem Assoziationsnamen gibt die Leserichtung an.</p>
+      <h4>Aggregation vs. Komposition</h4>
+      <p>Beide drücken eine <strong>„ist Bestandteil von”</strong>-Beziehung aus. Der Unterschied liegt im Lebenszyklus:</p>
+      <table style=”width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;”>
+        <thead><tr style=”border-bottom:2px solid var(--line);”>
+          <th style=”text-align:left;padding:5px 8px;”>Beziehungstyp</th>
+          <th style=”text-align:left;padding:5px 8px;”>Symbol</th>
+          <th style=”text-align:left;padding:5px 8px;”>Lebenszyklus des Teils</th>
+          <th style=”text-align:left;padding:5px 8px;”>Beispiel</th>
+        </tr></thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:5px 8px;”><strong>Aggregation</strong></td>
+            <td style=”padding:5px 8px;”>Offene Raute am Ganzen</td>
+            <td style=”padding:5px 8px;”>Teil existiert weiter, wenn das Ganze gelöscht wird</td>
+            <td style=”padding:5px 8px;”>Auto – Räder (Räder können weiterverkauft werden)</td>
+          </tr>
+          <tr>
+            <td style=”padding:5px 8px;”><strong>Komposition</strong></td>
+            <td style=”padding:5px 8px;”>Gefüllte Raute am Ganzen</td>
+            <td style=”padding:5px 8px;”>Teil wird mitgelöscht, wenn das Ganze gelöscht wird</td>
+            <td style=”padding:5px 8px;”>Gebäude – Räume (Räume gibt es nur als Teil des Gebäudes)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Aggregation und Komposition unterscheiden sich am <strong>Lebenszyklustest</strong>: Kann das Teil auch ohne das Ganze existieren? Ja → Aggregation (offene Raute). Nein → Komposition (gefüllte Raute). Weitere Beispiele: Button in Window = Komposition; Maschine in Fabrik = Aggregation.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 05 ============ -->
+  <section class="chapter" id="kap-05">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 05 <span class="pages">· Skript S. 282–408</span></span>
+      <h2>Vererbungsbeziehungen</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Vererbung ermöglicht die Weitergabe von Attributen und Methoden einer <strong>Superklasse</strong> (Elternklasse) an <strong>Subklassen</strong> (Kindklassen). Java unterstützt nur <em>Einfachvererbung</em> (eine Elternklasse pro Klasse), erlaubt aber das Implementieren mehrerer Interfaces. Durch <strong>Polymorphie</strong> kann eine Variable vom Typ der Elternklasse Objekte von Kindklassen halten – welche Methode zur Laufzeit aufgerufen wird, bestimmt der tatsächliche Objekttyp (dynamische Bindung). Abstrakte Klassen und Interfaces erzwingen die Implementierung bestimmter Methoden in den Subklassen.</p>
+    </div>
+
+    <div class=”block” id=”k5-wozu”>
+      <h3>Wozu Vererbung?</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Wozu Vererbung?”, S. 285–295</div>
+      <p>Ohne Vererbung müssen gemeinsame Eigenschaften (z.&nbsp;B. <code class=”inline”>vorname</code>, <code class=”inline”>nachname</code>) in jeder Klasse neu implementiert werden – das verstößt gegen das <strong>DRY-Prinzip</strong> (Don't Repeat Yourself). Außerdem lassen sich <strong>ist-ein-Beziehungen</strong> nicht modellieren: ein/e Studierende/r <em>ist eine</em> Person mit zusätzlichen Merkmalen.</p>
+      <p>Mit Vererbung wird gemeinsames Verhalten <strong>einmal</strong> in der Superklasse implementiert. Kindklassen erben dieses Verhalten automatisch und ergänzen es um ihre eigenen Besonderheiten:</p>
+      <ul>
+        <li><strong>Generalisierung:</strong> Gemeinsame Eigenschaften werden in die Superklasse „hochgezogen”.</li>
+        <li><strong>Spezialisierung:</strong> Kindklassen fügen eigene Attribute/Methoden hinzu.</li>
+      </ul>
+    </div>
+
+    <div class=”block” id=”k5-einfach”>
+      <h3>Einfache Vererbung: extends, Eltern-/Kindklassen, Objekterzeugung</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Einfache Vererbungsbeziehungen in Java”, S. 296–310</div>
+      <p>Die Vererbungsbeziehung wird in Java mit <code class=”inline”>extends</code> deklariert. Im Konstruktor der Kindklasse muss als <strong>erstes Statement</strong> der Superklassen-Konstruktor mit <code class=”inline”>super()</code> aufgerufen werden:</p>
+      <pre class=”code”><span class=”kw”>public class</span> <span class=”ty”>Person</span> {
+    <span class=”kw”>private</span> <span class=”ty”>String</span> vorname, nachname;
+    <span class=”kw”>public</span> <span class=”ty”>Person</span>(<span class=”ty”>String</span> vorname, <span class=”ty”>String</span> nachname) {
+        <span class=”kw”>this</span>.vorname = vorname; <span class=”kw”>this</span>.nachname = nachname;
+    }
+    <span class=”kw”>public</span> <span class=”ty”>String</span> getNachname() { <span class=”kw”>return</span> nachname; }
+    <span class=”kw”>public</span> <span class=”ty”>String</span> getVorname()  { <span class=”kw”>return</span> vorname; }
+}
+
+<span class=”kw”>public class</span> <span class=”ty”>Studierende</span> <span class=”kw”>extends</span> <span class=”ty”>Person</span> {   <span class=”cm”>// erbt von Person</span>
+    <span class=”kw”>private int</span> matrikelnr;
+
+    <span class=”kw”>public</span> <span class=”ty”>Studierende</span>(<span class=”ty”>String</span> vorname, <span class=”ty”>String</span> nachname, <span class=”kw”>int</span> matrikelnr) {
+        <span class=”kw”>super</span>(vorname, nachname); <span class=”cm”>// MUSS als erstes kommen!</span>
+        <span class=”kw”>this</span>.matrikelnr = matrikelnr;
+    }
+    <span class=”kw”>public int</span> getMatrikelnr() { <span class=”kw”>return</span> matrikelnr; }
+    <span class=”cm”>// getNachname() und getVorname() sind geerbt – keine erneute Implementierung nötig!</span>
+}</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Kindklassen können <strong>nicht</strong> direkt auf <code class=”inline”>private</code>-Attribute der Elternklasse zugreifen – auch wenn sie geerbt wurden. Der Zugriff ist nur über den Superklassen-Konstruktor (<code class=”inline”>super()</code>) oder <code class=”inline”>protected</code>/public-Methoden möglich. Java unterstützt <strong>keine Mehrfachvererbung</strong>: eine Klasse kann nur von genau einer anderen Klasse erben.
+      </div>
+    </div>
+
+    <div class=”block” id=”k5-polymorphie”>
+      <h3>Polymorphie – Vielgestaltigkeit von Objekten</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitte „Polymorphie” &amp; „Dynamische Bindung”, S. 308–320</div>
+      <p>Eine Variable vom Typ der Superklasse kann ein Objekt irgendeiner Subklasse aufnehmen – denn eine Studierende <em>ist eine</em> Person:</p>
+      <pre class=”code”><span class=”cm”>// Statischer Typ: Person | Dynamischer Typ: Studierende</span>
+<span class=”ty”>Person</span> s = <span class=”kw”>new</span> <span class=”ty”>Studierende</span>(<span class=”st”>”Erna”</span>, <span class=”st”>”Etepetete”</span>, 4711);
+
+<span class=”cm”>// OK: getNachname() ist in Person bekannt</span>
+<span class=”ty”>String</span> name = s.getNachname();
+
+<span class=”cm”>// FEHLER: getMatrikelnr() kennt der statische Typ Person nicht!</span>
+<span class=”kw”>int</span> matnr = s.getMatrikelnr(); <span class=”cm”>// Compilerfehler</span>
+
+<span class=”cm”>// Lösung: Downcast auf den konkreten Typ</span>
+<span class=”kw”>if</span> (s <span class=”kw”>instanceof</span> <span class=”ty”>Studierende</span>) {
+    <span class=”ty”>Studierende</span> stud = (<span class=”ty”>Studierende</span>) s;
+    <span class=”kw”>int</span> nr = stud.getMatrikelnr();
+}</pre>
+      <p><strong>Dynamische Bindung:</strong> Wenn eine Methode in der Kindklasse <em>überschrieben</em> wurde, entscheidet zur Laufzeit der <em>dynamische Typ</em> (der tatsächliche Objekttyp), welche Methodenimplementierung aufgerufen wird – nicht der statische Typ der Variable.</p>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Klassische Klausuraufgabe: Eine Variable vom Typ Person zeigt auf ein Studierende-Objekt. Beide Klassen haben eine Methode <code class=”inline”>print()</code>. Welche wird aufgerufen? → Die der <strong>Kindklasse</strong> (Studierende), weil Java die Methode dynamisch zur Laufzeit bindet. Der Compiler schaut auf den statischen Typ; die JVM beim Ausführen auf den tatsächlichen Objekttyp.
+      </div>
+    </div>
+
+    <div class=”block” id=”k5-object”>
+      <h3>Die Superklasse aller Klassen: Object</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „DIE Superklasse: Object”, S. 321–330</div>
+      <p>Alle Java-Klassen erben implizit von der Klasse <code class=”inline”>java.lang.Object</code>. Dadurch stehen in jeder eigenen Klasse bestimmte Methoden zur Verfügung, die bei Bedarf überschrieben werden können:</p>
+      <ul>
+        <li><code class=”inline”>toString()</code> – gibt eine textuelle Beschreibung des Objekts zurück. Standard: Klassenname + Hashcode. Sollte in eigenen Klassen überschrieben werden, um sinnvolle Ausgaben zu erhalten.</li>
+        <li><code class=”inline”>equals(Object o)</code> – vergleicht zwei Objekte auf Inhalt. Standard: Referenzvergleich (wie <code class=”inline”>==</code>). In eigenen Klassen überschreiben, um echten Inhaltsvergleich zu ermöglichen.</li>
+        <li><code class=”inline”>hashCode()</code> – Hash-Wert des Objekts; muss konsistent mit <code class=”inline”>equals()</code> sein.</li>
+      </ul>
+      <pre class=”code”><span class=”cm”>// toString() überschreiben</span>
+@<span class=”ty”>Override</span>
+<span class=”kw”>public</span> <span class=”ty”>String</span> toString() {
+    <span class=”kw”>return</span> <span class=”st”>”Person[“</span> + vorname + <span class=”st”>” “</span> + nachname + <span class=”st”>”]”</span>;
+}</pre>
+    </div>
+
+    <div class=”block” id=”k5-ueberladen”>
+      <h3>Überladen vs. Überschreiben</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Überladen vs. Überschreiben”, S. 331–345</div>
+      <table style=”width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;”>
+        <thead><tr style=”border-bottom:2px solid var(--line);”>
+          <th style=”text-align:left;padding:5px 8px;”>Konzept</th>
+          <th style=”text-align:left;padding:5px 8px;”>Wo?</th>
+          <th style=”text-align:left;padding:5px 8px;”>Signatur</th>
+          <th style=”text-align:left;padding:5px 8px;”>Zweck</th>
+        </tr></thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:5px 8px;”><strong>Überladen</strong> (Overloading)</td>
+            <td style=”padding:5px 8px;”>Gleiche Klasse</td>
+            <td style=”padding:5px 8px;”>Gleicher Methodenname, <strong>andere Parameter</strong></td>
+            <td style=”padding:5px 8px;”>Mehrere Varianten einer Methode für verschiedene Eingaben</td>
+          </tr>
+          <tr>
+            <td style=”padding:5px 8px;”><strong>Überschreiben</strong> (Overriding)</td>
+            <td style=”padding:5px 8px;”>Kind- vs. Elternklasse</td>
+            <td style=”padding:5px 8px;”><strong>Identische</strong> Signatur</td>
+            <td style=”padding:5px 8px;”>Kindklasse ersetzt die geerbte Implementierung durch eigene</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre class=”code”><span class=”cm”>// Überladen: gleicher Name, andere Parameterliste</span>
+<span class=”kw”>void</span> print() { <span class=”ty”>System</span>.out.println(name); }
+<span class=”kw”>void</span> print(<span class=”ty”>String</span> prefix) { <span class=”ty”>System</span>.out.println(prefix + name); }
+
+<span class=”cm”>// Überschreiben: identische Signatur in Kindklasse</span>
+<span class=”cm”>// In Superklasse Person:</span>
+<span class=”kw”>public</span> <span class=”ty”>String</span> toString() { <span class=”kw”>return</span> <span class=”st”>”Person: “</span> + name; }
+
+<span class=”cm”>// In Kindklasse Studierende:</span>
+@<span class=”ty”>Override</span>
+<span class=”kw”>public</span> <span class=”ty”>String</span> toString() { <span class=”kw”>return</span> <span class=”st”>”Stud: “</span> + name + <span class=”st”>” (“</span> + matnr + <span class=”st”>”)”</span>; }</pre>
+    </div>
+
+    <div class=”block” id=”k5-abstrakt”>
+      <h3>Abstrakte Klassen &amp; @Override</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitte „Abstrakte Klassen” &amp; „Einschub: @Override”, S. 346–370</div>
+      <p>Eine <strong>abstrakte Klasse</strong> ist ein unvollständiger Bauplan: sie kann abstrakte Methoden enthalten, die <em>keinen Methodenrumpf</em> haben. Abstrakte Klassen können <strong>nicht instanziiert</strong> werden – sie erzwingen, dass Kindklassen die abstrakten Methoden implementieren.</p>
+      <pre class=”code”><span class=”kw”>public abstract class</span> <span class=”ty”>Tier</span> {
+    <span class=”kw”>private</span> <span class=”ty”>String</span> name;
+
+    <span class=”kw”>public</span> <span class=”ty”>Tier</span>(<span class=”ty”>String</span> name) { <span class=”kw”>this</span>.name = name; }
+
+    <span class=”cm”>// Abstrakte Methode: kein Rumpf, muss in Kindklasse implementiert werden</span>
+    <span class=”kw”>public abstract void</span> lautGeben();
+
+    <span class=”cm”>// Normale Methode: vererbt wie gewohnt</span>
+    <span class=”kw”>public</span> <span class=”ty”>String</span> getName() { <span class=”kw”>return</span> name; }
+}
+
+<span class=”kw”>public class</span> <span class=”ty”>Hund</span> <span class=”kw”>extends</span> <span class=”ty”>Tier</span> {
+    <span class=”kw”>public</span> <span class=”ty”>Hund</span>(<span class=”ty”>String</span> name) { <span class=”kw”>super</span>(name); }
+
+    @<span class=”ty”>Override</span>            <span class=”cm”>// Annotation: prüft, ob tatsächlich überschrieben wird</span>
+    <span class=”kw”>public void</span> lautGeben() { <span class=”ty”>System</span>.out.println(<span class=”st”>”Wuff!”</span>); }
+}</pre>
+      <p>Die Annotation <code class=”inline”>@Override</code> ist optional, aber empfohlen: sie weist den Compiler an zu prüfen, ob die Methode wirklich eine geerbte Methode überschreibt. Tippfehler im Methodennamen werden so sofort als Compilerfehler erkannt.</p>
+    </div>
+
+    <div class=”block” id=”k5-interfaces”>
+      <h3>Interfaces</h3>
+      <div class=”src”>Quelle: Skript Teil 1, Abschnitt „Interfaces”, S. 371–408</div>
+      <h4>Grundlagen &amp; Vererbung mit Interfaces</h4>
+      <p>Ein <strong>Interface</strong> ist ein reiner Vertrag – eine Sammlung von Methodenköpfen ohne Implementierung. Klassen, die ein Interface implementieren, verpflichten sich, alle darin definierten Methoden zu implementieren. Der Vorteil: eine Klasse kann mehrere Interfaces implementieren (Java erlaubt nur Einfachvererbung bei Klassen).</p>
+      <pre class=”code”><span class=”cm”>// Interface-Definition</span>
+<span class=”kw”>public interface</span> <span class=”ty”>Druckbar</span> {
+    <span class=”kw”>void</span> drucken();         <span class=”cm”>// implizit public abstract</span>
+}
+
+<span class=”kw”>public interface</span> <span class=”ty”>Speicherbar</span> {
+    <span class=”kw”>void</span> speichern(<span class=”ty”>String</span> pfad);
+}
+
+<span class=”cm”>// Klasse implementiert mehrere Interfaces</span>
+<span class=”kw”>public class</span> <span class=”ty”>Bericht</span> <span class=”kw”>extends</span> <span class=”ty”>Dokument</span>
+        <span class=”kw”>implements</span> <span class=”ty”>Druckbar</span>, <span class=”ty”>Speicherbar</span> {
+
+    @<span class=”ty”>Override</span>
+    <span class=”kw”>public void</span> drucken() { <span class=”ty”>System</span>.out.println(<span class=”st”>”Drucke...”</span>); }
+
+    @<span class=”ty”>Override</span>
+    <span class=”kw”>public void</span> speichern(<span class=”ty”>String</span> pfad) { <span class=”cm”>/* ... */</span> }
+}</pre>
+      <h4>Default-Methoden &amp; mehrstufige Hierarchien</h4>
+      <p>Seit Java 8 können Interfaces <strong>Default-Methoden</strong> enthalten – Methoden mit einem vorgegebenen Rumpf. Sie werden an implementierende Klassen vererbt und können optional überschrieben werden:</p>
+      <pre class=”code”><span class=”kw”>public interface</span> <span class=”ty”>Druckbar</span> {
+    <span class=”kw”>void</span> drucken(); <span class=”cm”>// abstrakt – muss implementiert werden</span>
+
+    <span class=”cm”>// Default-Methode – kann überschrieben werden, muss aber nicht</span>
+    <span class=”kw”>default void</span> druckenMitRahmen() {
+        <span class=”ty”>System</span>.out.println(<span class=”st”>”--- Anfang ---”</span>);
+        drucken();
+        <span class=”ty”>System</span>.out.println(<span class=”st”>”--- Ende ---”</span>);
+    }
+}</pre>
+      <p>Interfaces wirken sich auch auf Polymorphie aus: Eine Variable vom Interface-Typ kann jedes Objekt aufnehmen, dessen Klasse dieses Interface implementiert.</p>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        <strong>Abstrakte Klasse vs. Interface:</strong> Abstrakte Klassen können Attribute und normale Methoden haben; eine Klasse kann nur von <em>einer</em> abstrakten Klasse erben. Interfaces dürfen keine Instanzvariablen haben (nur Konstanten); eine Klasse kann aber <em>beliebig viele</em> Interfaces implementieren. Wähle Interface, wenn eine reine Verhaltensvereinbarung ohne gemeinsame Attribute gefragt ist.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 06 ============ -->
+  <section class="chapter" id="kap-06">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 06 <span class="pages">· Skript S. 409–435</span></span>
+      <h2>Exceptions</h2>
+    </div>
+
+    <div class="summary">
+      <span class="tag">Zusammenfassung</span>
+      <p>Exceptions sind <strong>Objekte</strong> spezieller Klassen, die bei Fehler- oder Ausnahmesituationen erzeugt und „geworfen" werden. Sie ermöglichen eine saubere Trennung von <em>normalem Standardcode</em> (try-Block) und <em>Fehlerbehandlungscode</em> (catch-Block). Mit <code class="inline">throw</code> wirft eine Methode eine Exception; mit <code class="inline">throws</code> im Methodenkopf deklariert sie, dass sie eine Exception weiterreichen kann. Der <code class="inline">finally</code>-Block wird immer ausgeführt – egal ob eine Exception aufgetreten ist oder nicht.</p>
+    </div>
+
+    <div class="block" id="k6-was">
+      <h3>Was sind Exceptions?</h3>
+      <div class="src">Quelle: Skript Teil 1, Abschnitt „Was sind Exceptions?", S. 411–413</div>
+      <p>Exceptions sind Objekte spezieller Klassen, die Informationen darüber enthalten, <em>wo</em> im Code ein Fehler aufgetreten ist. Sie können sehr schnell durch alle Aufrufebenen nach oben durchgereicht werden. Wichtige vorgefertigte Exception-Klassen:</p>
+      <ul>
+        <li><code class="inline">NullPointerException</code> – Zugriff auf eine <code class="inline">null</code>-Referenz</li>
+        <li><code class="inline">ArrayIndexOutOfBoundsException</code> – Array-Index außerhalb des gültigen Bereichs</li>
+        <li><code class="inline">NumberFormatException</code> – ungültiges Zahlenformat beim Parsen</li>
+        <li><code class="inline">FileNotFoundException</code> – Datei nicht gefunden</li>
+        <li><code class="inline">IOException</code> – allgemeine Ein-/Ausgabe-Fehler</li>
+      </ul>
+      <p>Alle Exception-Klassen sind von der gemeinsamen Klasse <code class="inline">Exception</code> abgeleitet (und diese von <code class="inline">Throwable</code>).</p>
+    </div>
+
+    <div class="block" id="k6-throw">
+      <h3>Exceptions erzeugen und werfen: throw &amp; throws</h3>
+      <div class="src">Quelle: Skript Teil 1, Abschnitt „Exceptions werfen", S. 414–424</div>
+      <p><code class="inline">throw</code> und <code class="inline">throws</code> sind zwei verschiedene Schlüsselwörter mit unterschiedlicher Bedeutung:</p>
+      <ul>
+        <li><strong><code class="inline">throw</code></strong> steht <em>im Methodenrumpf</em> und wirft ein konkretes Exception-Objekt.</li>
+        <li><strong><code class="inline">throws</code></strong> steht <em>am Methodenkopf</em> und deklariert, welche Exception-Typen die Methode weiterreichen kann.</li>
+      </ul>
+      <pre class="code"><span class="kw">public int</span> returnZahlWert(<span class="kw">char</span> ziffer)
+        <span class="kw">throws</span> <span class="ty">NumberFormatException</span> {   <span class="cm">// Deklaration am Kopf</span>
+
+    <span class="kw">if</span> (ziffer &gt;= <span class="st">'0'</span> &amp;&amp; ziffer &lt;= <span class="st">'9'</span>) {
+        <span class="kw">return</span> ziffer - <span class="st">'0'</span>;           <span class="cm">// Normalfall</span>
+    } <span class="kw">else</span> {
+        <span class="cm">// Fehlfall: Exception-Objekt erzeugen und werfen</span>
+        <span class="ty">NumberFormatException</span> e =
+            <span class="kw">new</span> <span class="ty">NumberFormatException</span>(<span class="st">"Keine Ziffer!"</span>);
+        <span class="kw">throw</span> e;
+    }
+}</pre>
+      <p>Wenn eine aufrufende Methode eine <code class="inline">throws</code>-Methode aufruft, muss sie selbst entweder ebenfalls <code class="inline">throws</code> deklarieren <em>oder</em> die Exception mit <code class="inline">try-catch</code> fangen.</p>
+    </div>
+
+    <div class="block" id="k6-try">
+      <h3>Exceptions fangen: try – catch – finally</h3>
+      <div class="src">Quelle: Skript Teil 1, Abschnitt „Exceptions fangen", S. 425–435</div>
+      <p>Mit <code class="inline">try-catch</code> wird eine Exception methodenintern gefangen – der Aufrufer merkt davon nichts und benötigt kein eigenes <code class="inline">throws</code>.</p>
+      <pre class="code"><span class="kw">try</span> {
+    <span class="cm">// "probiere" diesen Code – hier kann eine Exception entstehen</span>
+    <span class="ty">String</span> s = tastatur.next();
+    <span class="kw">char</span>   c = s.charAt(0);
+    <span class="kw">int</span>  wert = worker.returnZahlWert(c); <span class="cm">// wirft ggf. Exception</span>
+}
+<span class="kw">catch</span> (<span class="ty">NumberFormatException</span> ex) {
+    <span class="cm">// Single-Exception-Catch: gezielter Abfang eines Typs</span>
+    ex.printStackTrace();
+}
+<span class="kw">catch</span> (<span class="ty">StringIndexOutOfBoundsException</span> ex) {
+    <span class="ty">System</span>.out.println(<span class="st">"Leere Eingabe!"</span>);
+}
+<span class="kw">catch</span> (<span class="ty">Exception</span> ex) {
+    <span class="cm">// Allgemeiner Catch – IMMER als letzter Block!</span>
+    <span class="ty">System</span>.out.println(<span class="st">"Unbekannter Fehler: "</span> + ex.getMessage());
+}
+<span class="kw">finally</span> {
+    <span class="cm">// Wird IMMER ausgeführt – ideal zum Schließen von Ressourcen</span>
+    <span class="ty">System</span>.out.println(<span class="st">"Fertig."</span>);
+}</pre>
+      <p>Alternativ: <strong>Multiple-Exception-Catch</strong> – mehrere Typen in einem Block mit <code class="inline">|</code> verbunden:</p>
+      <pre class="code"><span class="kw">catch</span> (<span class="ty">NumberFormatException</span> | <span class="ty">StringIndexOutOfBoundsException</span> ex) {
+    ex.printStackTrace(); <span class="cm">// gleiche Behandlung für beide Typen</span>
+}</pre>
+      <div class="hint">
+        <span class="tag">Prüfungshinweis</span>
+        Der <strong><code class="inline">finally</code>-Block ist optional</strong>, wird aber – wenn vorhanden – immer ausgeführt (auch wenn kein Fehler aufgetreten ist). Er eignet sich zum Schließen von Streams oder Datenbankverbindungen. Der <code class="inline">catch(Exception e)</code>-Block muss immer <strong>als letzter</strong> stehen, weil er alle Ausnahmen abfängt – andernfalls entsteht ein Compilerfehler.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 07 ============ -->
+  <section class="chapter" id="kap-07">
+    <div class="chapter-head">
+      <span class="eyebrow">Kapitel 07 <span class="pages">· Skript S. 436–455</span></span>
+      <h2>Einstieg Streams</h2>
+    </div>
+
+    <div class="summary">
+      <span class="tag">Zusammenfassung</span>
+      <p>Streams sind <strong>Datenflüsse</strong> zwischen einer Quelle (z.&nbsp;B. Tastatur, Datei, Netzwerk) und einem Ziel (z.&nbsp;B. Bildschirm, Datei). Java unterscheidet <strong>zeichenorientierte Streams</strong> (für Textdaten) und <strong>byteorientierte Streams</strong> (für Binärdaten). Streams werden durch Verschachtelung der Konstruktoren kombiniert. Da Stream-Methoden Exceptions werfen, muss immer <code class="inline">IOException</code> behandelt werden. Geöffnete Streams müssen mit <code class="inline">close()</code> wieder geschlossen werden.</p>
+    </div>
+
+    <div class="block" id="k7-konzept">
+      <h3>Das Stream-Konzept in Java</h3>
+      <div class="src">Quelle: Skript Teil 1, Abschnitt „Stream-Konzept", S. 437–447</div>
+      <p>Bisher wurde der <code class="inline">Scanner</code> für Tastatureingaben genutzt. Streams sind leistungsfähiger und flexibler: Sie können dieselben Daten aus beliebigen Quellen lesen – Tastatur, Datei, Netzwerkverbindung. Das Prinzip ist immer gleich: Streams werden so <strong>verschachtelt</strong>, dass die gewünschte Datenquelle mit der gewünschten Konvertierung kombiniert wird:</p>
+      <pre class="code"><span class="kw">import</span> java.io.*; <span class="cm">// alle Stream-Klassen aus java.io</span>
+
+<span class="cm">// Tastatureingabe zeilenweise lesen – Verschachtelung der Konstruktoren:</span>
+<span class="ty">BufferedReader</span> konsole = <span class="kw">new</span> <span class="ty">BufferedReader</span>(
+    <span class="kw">new</span> <span class="ty">InputStreamReader</span>(<span class="ty">System</span>.in));
+
+<span class="ty">String</span> eingabe = konsole.readLine(); <span class="cm">// liest eine Zeile</span></pre>
+      <p>Der <code class="inline">InputStreamReader</code> konvertiert die Rohbytes des Tastaturpuffers in Zeichen; der <code class="inline">BufferedReader</code> puffert und ermöglicht die zeilenweise Verarbeitung mit <code class="inline">readLine()</code>.</p>
+      <p><strong>Vorgehen bei der Nutzung von Streams:</strong></p>
+      <ol>
+        <li>Klassen mit <code class="inline">import java.io.*;</code> einbinden.</li>
+        <li>Exceptions behandeln: entweder <code class="inline">throws IOException</code> am Methodenkopf oder intern mit <code class="inline">try-catch</code>.</li>
+        <li>Streams kombinieren: Datenquelle + Konvertierung verschachteln.</li>
+        <li>Stream nach Gebrauch mit <code class="inline">close()</code> schließen.</li>
+      </ol>
+    </div>
+
+    <div class="block" id="k7-datei">
+      <h3>Dateizugriff mit zeichenorientierten Streams</h3>
+      <div class="src">Quelle: Skript Teil 1, Abschnitt „Dateizugriff mit zeichenorientierten Streams", S. 448–452</div>
+      <p>Für textbasierte Dateizugriffe werden <code class="inline">FileReader</code>/<code class="inline">BufferedReader</code> (Lesen) und <code class="inline">FileWriter</code>/<code class="inline">BufferedWriter</code> (Schreiben) verwendet:</p>
+      <pre class="code"><span class="cm">// ---- Datei lesen ----</span>
+<span class="kw">public</span> <span class="ty">String</span> dateiEinlesen(<span class="ty">String</span> dateiname)
+        <span class="kw">throws</span> <span class="ty">IOException</span>, <span class="ty">FileNotFoundException</span> {
+
+    <span class="ty">String</span> inhalt = <span class="st">""</span>, zeile;
+    <span class="ty">BufferedReader</span> leser = <span class="kw">new</span> <span class="ty">BufferedReader</span>(
+        <span class="kw">new</span> <span class="ty">FileReader</span>(dateiname));
+
+    <span class="cm">// readLine() gibt null zurück, wenn das Dateiende erreicht ist</span>
+    <span class="kw">while</span> ((zeile = leser.readLine()) != <span class="kw">null</span>) {
+        inhalt += zeile + <span class="st">"\n"</span>; <span class="cm">// readLine() schneidet \n ab → wieder anfügen</span>
+    }
+    leser.close(); <span class="cm">// Stream MUSS geschlossen werden!</span>
+    <span class="kw">return</span> inhalt;
+}
+
+<span class="cm">// ---- Datei schreiben ----</span>
+<span class="kw">public void</span> dateiSchreiben(<span class="ty">String</span> dateiname, <span class="ty">String</span> inhalt)
+        <span class="kw">throws</span> <span class="ty">IOException</span> {
+
+    <span class="ty">BufferedWriter</span> schreiber = <span class="kw">new</span> <span class="ty">BufferedWriter</span>(
+        <span class="kw">new</span> <span class="ty">FileWriter</span>(dateiname));
+
+    schreiber.write(inhalt); <span class="cm">// gesamten String schreiben</span>
+    schreiber.close();       <span class="cm">// Stream schließen – schreibt gepufferte Daten heraus</span>
+}</pre>
+      <div class="hint">
+        <span class="tag">Prüfungshinweis</span>
+        Wenn ein Stream nicht mit <code class="inline">close()</code> geschlossen wird, kann die Zieldatei leer oder unvollständig sein – gepufferte Daten wurden noch nicht herausgeschrieben. <code class="inline">readLine()</code> schneidet automatisch den Zeilenumbruch ab; dieser muss beim Aufbau des Rückgabe-Strings explizit mit <code class="inline">+ "\n"</code> wieder hinzugefügt werden.
+      </div>
+    </div>
+
+    <div class="block" id="k7-zoo">
+      <h3>Der Klassenzoo der Streams</h3>
+      <div class="src">Quelle: Skript Teil 1, Abschnitt „Klassenzoo der Streams", S. 453–454</div>
+      <p>Java teilt Streams in zwei große Familien:</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;">
+        <thead><tr style="border-bottom:2px solid var(--line);">
+          <th style="text-align:left;padding:5px 8px;">Familie</th>
+          <th style="text-align:left;padding:5px 8px;">Basisklassen</th>
+          <th style="text-align:left;padding:5px 8px;">Zweck</th>
+          <th style="text-align:left;padding:5px 8px;">Wichtige Klassen</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--line);">
+            <td style="padding:5px 8px;"><strong>Zeichenorientiert</strong></td>
+            <td style="padding:5px 8px;"><code class="inline">Reader</code> / <code class="inline">Writer</code></td>
+            <td style="padding:5px 8px;">Textdateien, Tastatur, Zeichenketten</td>
+            <td style="padding:5px 8px;"><code class="inline">FileReader</code>, <code class="inline">BufferedReader</code>, <code class="inline">InputStreamReader</code>, <code class="inline">FileWriter</code>, <code class="inline">BufferedWriter</code>, <code class="inline">PrintWriter</code></td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;"><strong>Byteorientiert</strong></td>
+            <td style="padding:5px 8px;"><code class="inline">InputStream</code> / <code class="inline">OutputStream</code></td>
+            <td style="padding:5px 8px;">Binärdaten: Bilder, Audio, Objekte</td>
+            <td style="padding:5px 8px;"><code class="inline">FileInputStream</code>, <code class="inline">DataInputStream</code>, <code class="inline">ObjectInputStream</code>, <code class="inline">FileOutputStream</code>, <code class="inline">DataOutputStream</code>, <code class="inline">ObjectOutputStream</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Die Verschachtelung der Konstruktoren folgt immer dem gleichen Muster: Innerster Konstruktor = Datenquelle/Datensenke; äußere Konstruktoren = Konvertierung und Pufferung.</p>
+    </div>
+  </section>
+
+  <!-- ============ ANHANG ============ -->
+  <section class="chapter" id="kap-A">
+    <div class="chapter-head">
+      <span class="eyebrow">Anhang <span class="pages">· Skript S. 456–459</span></span>
+      <h2>Priorität von Operatoren</h2>
+    </div>
+    <div class="block">
+      <h3>Operatorentabelle &amp; Assoziativität</h3>
+      <div class="src">Quelle: Skript Teil 1, ab S. 457</div>
+      <p>Bei Ausdrücken mit mehreren Operatoren bestimmt die <strong>Priorität</strong>, welcher Operator zuerst ausgewertet wird (Priorität 1 = höchste). Die <strong>Assoziativität</strong> gibt an, ob bei gleicher Priorität von links nach rechts (<em>links</em>) oder rechts nach links (<em>rechts</em>) ausgewertet wird.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;">
+        <thead><tr style="border-bottom:2px solid var(--line);">
+          <th style="text-align:left;padding:5px 8px;">Priorität</th>
+          <th style="text-align:left;padding:5px 8px;font-family:'IBM Plex Mono',monospace;">Operatoren</th>
+          <th style="text-align:left;padding:5px 8px;">Bedeutung</th>
+          <th style="text-align:left;padding:5px 8px;">Assoziat.</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>1</strong></td><td style="padding:4px 8px;"><code class="inline">[] () . ++ --</code></td><td style="padding:4px 8px;">Array-Index, Klammerung, Zugriff, Post-Inkrement/-Dekrement</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>2</strong></td><td style="padding:4px 8px;"><code class="inline">++ -- + - ~ !</code></td><td style="padding:4px 8px;">Pre-Inkrement/-Dekrement, Vorzeichen, bitweise/logische Negation</td><td style="padding:4px 8px;">rechts</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>3</strong></td><td style="padding:4px 8px;"><code class="inline">(typ) new</code></td><td style="padding:4px 8px;">Expliziter Typecast, Objekterzeugung</td><td style="padding:4px 8px;">rechts</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>4</strong></td><td style="padding:4px 8px;"><code class="inline">* / %</code></td><td style="padding:4px 8px;">Multiplikation, Division, Modulo</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>5</strong></td><td style="padding:4px 8px;"><code class="inline">+ - +</code></td><td style="padding:4px 8px;">Addition, Subtraktion, Stringverkettung</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>6</strong></td><td style="padding:4px 8px;"><code class="inline">&gt;&gt; &gt;&gt;&gt; &lt;&lt;</code></td><td style="padding:4px 8px;">Vorzeichenerhaltender Rechtsshift, vorzeichenloser Rechtsshift, Linksshift</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>7</strong></td><td style="padding:4px 8px;"><code class="inline">&lt; &lt;= &gt; &gt;= instanceof</code></td><td style="padding:4px 8px;">Größenvergleiche, Typüberprüfung</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>8</strong></td><td style="padding:4px 8px;"><code class="inline">== !=</code></td><td style="padding:4px 8px;">Gleichheit, Ungleichheit</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>9</strong></td><td style="padding:4px 8px;"><code class="inline">&amp;</code></td><td style="padding:4px 8px;">Bitweises UND</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>10</strong></td><td style="padding:4px 8px;"><code class="inline">^</code></td><td style="padding:4px 8px;">Bitweises Exklusiv-ODER (XOR)</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>11</strong></td><td style="padding:4px 8px;"><code class="inline">|</code></td><td style="padding:4px 8px;">Bitweises ODER</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>12</strong></td><td style="padding:4px 8px;"><code class="inline">&amp;&amp;</code></td><td style="padding:4px 8px;">Logisches UND (Kurzschlussoperator)</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>13</strong></td><td style="padding:4px 8px;"><code class="inline">||</code></td><td style="padding:4px 8px;">Logisches ODER (Kurzschlussoperator)</td><td style="padding:4px 8px;">links</td></tr>
+          <tr style="border-bottom:1px solid var(--line);"><td style="padding:4px 8px;"><strong>14</strong></td><td style="padding:4px 8px;"><code class="inline">? :</code></td><td style="padding:4px 8px;">Bedingungsoperator (ternär)</td><td style="padding:4px 8px;">rechts</td></tr>
+          <tr><td style="padding:4px 8px;"><strong>15</strong></td><td style="padding:4px 8px;"><code class="inline">= += -= *= /= %= &amp;= |= ^= &gt;&gt;= &lt;&lt;=</code></td><td style="padding:4px 8px;">Einfache und zusammengesetzte Zuweisung</td><td style="padding:4px 8px;">rechts</td></tr>
+        </tbody>
+      </table>
+      <div class="hint">
+        <span class="tag">Prüfungshinweis</span>
+        Kurzschlussoperatoren <code class="inline">&amp;&amp;</code> und <code class="inline">||</code>: der rechte Operand wird <em>nur ausgewertet</em>, wenn der linke Operand nicht bereits das Ergebnis bestimmt. Bei <code class="inline">a &amp;&amp; b</code> wird <code class="inline">b</code> nicht ausgewertet, wenn <code class="inline">a</code> bereits <code class="inline">false</code> ist. Das kann NullPointerExceptions verhindern: <code class="inline">obj != null &amp;&amp; obj.methode()</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 08 ============ -->
+  <section class=”chapter” id=”kap-08”>
+    <div class=”chapter-head”>
+      <span class=”eyebrow”>Kapitel 08 <span class=”pages”>· Skript S. 464–512</span></span>
+      <h2>Programmieren im Großen – Packages</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Packages strukturieren Programmsysteme <em>oberhalb</em> der Klassenebene. Zusammengehörende Klassen werden in gemeinsamen Unterverzeichnissen zusammengefasst. Jede Member-Klasse deklariert ihre Zugehörigkeit in der <strong>ersten Zeile</strong> mit der <code class=”inline”>package</code>-Anweisung; der Java-Compiler legt Compilate (<code class=”inline”>.class</code>-Dateien) automatisch im passenden Unterverzeichnis ab.</p>
+    </div>
+
+    <div class=”block” id=”k8-wozu”>
+      <h3>Wozu Packages?</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Wozu Packages?”, S. 466–467</div>
+      <p>Große, reale Programmsysteme enthalten oft mehrere hundert Klassen. Ohne übergeordnete Strukturierung wäre ein solches System kaum wartbar. Packages lösen dieses Problem:</p>
+      <ul>
+        <li>Packages ordnen Gruppen fachlich zusammengehörender Klassen in gemeinsame Unterverzeichnisse ein.</li>
+        <li>Eine Klasse, die zu einem Package gehört, heißt <strong>Member</strong> dieses Packages.</li>
+        <li>Die Zugehörigkeit ist direkt im Quelltext jeder Member-Klasse vermerkt.</li>
+      </ul>
+    </div>
+
+    <div class=”block” id=”k8-zuordnung”>
+      <h3>Zuordnung von Klassen zu Packages</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Zuordnung von Klassen zu Packages”, S. 468–471</div>
+      <h4>Einfache Packages</h4>
+      <p>Die <code class=”inline”>package</code>-Anweisung steht als <strong>erste Zeile</strong> vor dem Klassenkopf. Java legt automatisch einen Unterordner mit dem Package-Namen an:</p>
+      <pre class=”code”><span class=”kw”>package</span> mypackage;
+<span class=”kw”>public class</span> <span class=”ty”>MeineKlasse</span> {
+    <span class=”cm”>// Compilat landet in ./mypackage/MeineKlasse.class</span>
+}</pre>
+      <h4>Verschachtelte (Sub-)Packages</h4>
+      <p>Hierarchiestufen werden durch <code class=”inline”>.</code> getrennt – dieser wird plattformabhängig zum Verzeichnistrenner aufgelöst (Linux: <code class=”inline”>/</code>, Windows: <code class=”inline”>\</code>):</p>
+      <pre class=”code”><span class=”kw”>package</span> mypackage.sub1.sub2;
+<span class=”kw”>public class</span> <span class=”ty”>MeineKlasse</span> {
+    <span class=”cm”>// Compilat: ./mypackage/sub1/sub2/MeineKlasse.class</span>
+}</pre>
+    </div>
+
+    <div class=”block” id=”k8-import”>
+      <h3>Import von Klassen aus fremden Packages</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Import von Klassen aus fremden Packages”, S. 472–473</div>
+      <p><code class=”inline”>import</code>-Anweisungen stehen nach der <code class=”inline”>package</code>-Zeile, vor dem Klassenkopf. Es gibt zwei Varianten:</p>
+      <pre class=”code”><span class=”cm”>// Einzelne Klasse importieren:</span>
+<span class=”kw”>import</span> java.io.BufferedReader;
+
+<span class=”cm”>// Alle Klassen eines Packages importieren (Wildcard):</span>
+<span class=”kw”>import</span> java.io.*;</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Der Wildcard-Import <code class=”inline”>import java.io.*</code> bindet <strong>nur</strong> die direkten Klassen des genannten Packages ein – <strong>nicht</strong> die Klassen eventueller Sub-Packages! Eingebunden werden immer Compilate (<code class=”inline”>.class</code>-Dateien), keine Quelltexte.
+      </div>
+    </div>
+
+    <div class=”block” id=”k8-compilierung”>
+      <h3>Compilierung und Klassenpfad</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Compilierung und Klassenpfad”, S. 474–479</div>
+      <p>Empfohlene Verzeichnisstruktur: Quelldateien in <code class=”inline”>src/</code>, Compilate in <code class=”inline”>bin/</code>. Wichtige Compiler-Optionen:</p>
+      <table style=”width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;”>
+        <thead>
+          <tr style=”border-bottom:2px solid var(--line);”>
+            <th style=”text-align:left; padding:6px 10px; font-family:'IBM Plex Mono',monospace;”>Option</th>
+            <th style=”text-align:left; padding:6px 10px;”>Bedeutung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>-cp &lt;pfad&gt;</code></td>
+            <td style=”padding:6px 10px;”>Klassenpfad: Wo liegen importierte Klassen? Mehrere Pfade mit <code class=”inline”>;</code> (Win) oder <code class=”inline”>:</code> (Linux) trennen.</td>
+          </tr>
+          <tr>
+            <td style=”padding:6px 10px;”><code class=”inline”>-d &lt;pfad&gt;</code></td>
+            <td style=”padding:6px 10px;”>Destination: Zielverzeichnis für Compilate. Package-Unterordner werden automatisch angelegt.</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre class=”code”><span class=”cm”>// Aufruf aus dem Elternverzeichnis von src und bin:</span>
+javac -cp <span class=”st”>”.\bin”</span> -d <span class=”st”>”.\bin”</span> .\src\mypackage\Klasse1.java</pre>
+      <p>In Eclipse werden Packages über <em>File → New → Package</em> angelegt. Eclipse setzt die <code class=”inline”>package</code>-Anweisung und verwaltet den Klassenpfad automatisch.</p>
+    </div>
+
+    <div class=”block” id=”k8-uml”>
+      <h3>Packages in der UML</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Darstellung von Packages in der UML”, S. 480–481</div>
+      <p>Packages können in zwei UML-Diagrammarten dargestellt werden:</p>
+      <ul>
+        <li><strong>Klassendiagramm mit Packages:</strong> Klassen werden innerhalb eines Package-Rahmens (mit Namens-Tab oben links) gezeigt. <code class=”inline”>&lt;&lt;use&gt;&gt;</code>-Abhängigkeiten zwischen Packages kennzeichnen Nutzungsbeziehungen.</li>
+        <li><strong>Paketdiagramm:</strong> Zeigt nur die Package-Struktur und Enthält-Beziehungen. Innere Packages werden als ineinandergeschachtelte Rechtecke dargestellt.</li>
+      </ul>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Enthält-Beziehungen im Paketdiagramm sehen ähnlich aus wie Aggregation/Komposition im Klassendiagramm – aber Kontext ist entscheidend: Im Paketdiagramm steht ein Package im anderen, nicht ein Objekt in einem anderen Objekt.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 09 ============ -->
+  <section class=”chapter” id=”kap-09”>
+    <div class=”chapter-head”>
+      <span class=”eyebrow”>Kapitel 09 <span class=”pages”>· Skript S. 513–543</span></span>
+      <h2>Streams – Binär &amp; Objektserialisierung</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Aufbauend auf den zeichenorientierten Streams (Teil 1) kommen zwei neue Stream-Typen hinzu: <strong>Binärstreams</strong> für nicht-textuelle Daten (Bilder, Videos) und <strong>Objektstreams</strong> für die Serialisierung ganzer Java-Objekte als Byte-Sequenz. Klassen, deren Objekte serialisiert werden sollen, müssen das Marker-Interface <code class=”inline”>Serializable</code> implementieren.</p>
+    </div>
+
+    <div class=”block” id=”k9-binaer”>
+      <h3>Binärorientierte Streams</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Dateizugriff mit einfachen, byteorientierten Streams”, S. 515–523</div>
+      <p>Binärstreams verarbeiten rohe Byte-Daten und sind von <code class=”inline”>InputStream</code> (Lesen) bzw. <code class=”inline”>OutputStream</code> (Schreiben) abgeleitet. Wie bei zeichenorientierten Streams werden sie bei der Erzeugung nach Bedarf verschachtelt:</p>
+      <pre class=”code”><span class=”cm”>// Binäres Kopierprogramm – verarbeitet 4 Bytes pro Schritt</span>
+<span class=”kw”>byte</span>[] dateibytes = <span class=”kw”>new</span> <span class=”kw”>byte</span>[4];
+
+<span class=”ty”>DataInputStream</span> quelle = <span class=”kw”>new</span> <span class=”ty”>DataInputStream</span>(
+    <span class=”kw”>new</span> <span class=”ty”>FileInputStream</span>(args[0]));
+<span class=”ty”>DataOutputStream</span> senke = <span class=”kw”>new</span> <span class=”ty”>DataOutputStream</span>(
+    <span class=”kw”>new</span> <span class=”ty”>FileOutputStream</span>(args[1]));
+
+<span class=”kw”>int</span> anzBytes;
+<span class=”kw”>while</span> ((anzBytes = quelle.read(dateibytes)) != -1) {
+    senke.write(dateibytes, 0, anzBytes);
+}
+quelle.close(); <span class=”cm”>// Streams MÜSSEN nach Gebrauch geschlossen werden!</span>
+senke.close();</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        <code class=”inline”>read()</code> gibt <strong>−1</strong> zurück, wenn das Ende des Streams erreicht ist. Streams müssen mit <code class=”inline”>close()</code> geschlossen werden – sonst kann die Zieldatei leer oder unvollständig sein, da gepufferte Daten nicht herausgeschrieben werden.
+      </div>
+    </div>
+
+    <div class=”block” id=”k9-objekte”>
+      <h3>Objektserialisierung: ObjectOutputStream &amp; ObjectInputStream</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Verarbeitung von Java-Objekten mit Streams”, S. 524–543</div>
+      <p><code class=”inline”>ObjectOutputStream</code> und <code class=”inline”>ObjectInputStream</code> können ganze Java-Objekte als Einheit schreiben bzw. lesen. Das Schreiben heißt <strong>serialisieren</strong>, das Lesen <strong>deserialisieren</strong>.</p>
+      <p><strong>Voraussetzung:</strong> Die betroffene Klasse muss <code class=”inline”>implements Serializable</code> deklarieren. <code class=”inline”>Serializable</code> ist ein leeres Marker-Interface – es enthält keine Methoden, markiert aber die Klasse als serialisierbar.</p>
+      <pre class=”code”><span class=”kw”>import</span> java.io.Serializable;
+
+<span class=”kw”>public class</span> <span class=”ty”>BenzinVerbrauch</span> <span class=”kw”>implements</span> <span class=”ty”>Serializable</span> {
+    <span class=”kw”>private double</span> literGetankt;
+    <span class=”kw”>private</span> <span class=”ty”>String</span>  datum;
+    <span class=”kw”>private int</span>    kmStand;
+    <span class=”cm”>// Konstruktor, getter/setter ...</span>
+}
+
+<span class=”cm”>// ---- Serialisieren (Schreiben) ----</span>
+<span class=”ty”>ObjectOutputStream</span> out = <span class=”kw”>new</span> <span class=”ty”>ObjectOutputStream</span>(
+    <span class=”kw”>new</span> <span class=”ty”>FileOutputStream</span>(<span class=”st”>”Fahrtenbuch.tmp”</span>));
+out.writeInt(2);             <span class=”cm”>// Anzahl voranstellen</span>
+out.writeObject(verbrauch1); <span class=”cm”>// Objekte schreiben</span>
+out.writeObject(verbrauch2);
+out.close();
+
+<span class=”cm”>// ---- Deserialisieren (Lesen) ----</span>
+<span class=”ty”>ObjectInputStream</span> in = <span class=”kw”>new</span> <span class=”ty”>ObjectInputStream</span>(
+    <span class=”kw”>new</span> <span class=”ty”>FileInputStream</span>(<span class=”st”>”Fahrtenbuch.tmp”</span>));
+<span class=”kw”>int</span> anzahl = in.readInt();
+<span class=”kw”>for</span> (<span class=”kw”>int</span> i = 0; i &lt; anzahl; i++) {
+    <span class=”cm”>// readObject() liefert Object → TypeCast nötig</span>
+    <span class=”ty”>BenzinVerbrauch</span> b = (<span class=”ty”>BenzinVerbrauch</span>) in.readObject();
+}
+in.close();</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        <code class=”inline”>ClassNotFoundException</code> wird beim Deserialisieren geworfen, wenn die Ziel-Klasse im Programm nicht existiert oder beim Schreiben und Lesen unterschiedliche Package-Pfade verwendet wurden. Immer im <code class=”inline”>catch</code> abfangen!
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 10 ============ -->
+  <section class=”chapter” id=”kap-10”>
+    <div class=”chapter-head”>
+      <span class=”eyebrow”>Kapitel 10 <span class=”pages”>· Skript S. 544–685</span></span>
+      <h2>Generische Klassen (Generics)</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Generics sind typsichere Behälterklassen für beliebige Referenztypen. Der <strong>Typ-Parameter</strong> <code class=”inline”>&lt;T&gt;</code> wird bei der Instanziierung mit einem konkreten Datentyp belegt. So entfallen unsichere Casts auf <code class=”inline”>Object</code>. Das gesamte Java-Collection-Framework (ArrayList, HashMap, HashSet …) baut auf Generics auf.</p>
+    </div>
+
+    <div class=”block” id=”k10-wozu”>
+      <h3>Wozu Generics?</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Wozu Generics?”, S. 546–549</div>
+      <p>Generics sind Behälter für Referenzvariablen beliebigen Typs – z.&nbsp;B. <code class=”inline”>ArrayList</code>, Vektoren, Sets und Maps. Der Typ wird über spitze Klammern übergeben:</p>
+      <pre class=”code”><span class=”cm”>// Bekannt: ArrayList mit Typ-Parameter</span>
+<span class=”ty”>ArrayList</span>&lt;<span class=”ty”>String</span>&gt; liste = <span class=”kw”>new</span> <span class=”ty”>ArrayList</span>&lt;<span class=”ty”>String</span>&gt;();
+
+<span class=”cm”>// Verallgemeinerte Form jeder Generic:</span>
+<span class=”ty”>MeinGeneric</span>&lt;<span class=”ty”>Typ</span>&gt; behaelter = <span class=”kw”>new</span> <span class=”ty”>MeinGeneric</span>&lt;<span class=”ty”>Typ</span>&gt;();</pre>
+      <p>Bisher wurden Daten-Parameter über runde Klammern <code class=”inline”>()</code> durchgereicht. Bei Generics kommt ein <strong>Typ-Parameter</strong> in spitzen Klammern <code class=”inline”>&lt;&gt;</code> hinzu, der bei Deklaration und Konstruktoraufruf angegeben wird.</p>
+    </div>
+
+    <div class=”block” id=”k10-einfach”>
+      <h3>Einfache Generics – Beispiel Couple&lt;T&gt;</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitte „Einfache Generics” &amp; „Standard-Interfaces”, S. 550–559</div>
+      <p>Eine Generic-Klasse deklariert ihren Typ-Parameter im Klassenkopf. Alle Vorkommen von <code class=”inline”>T</code> innerhalb der Klasse werden bei der Instanziierung durch den konkreten Typ ersetzt:</p>
+      <pre class=”code”><span class=”kw”>public class</span> <span class=”ty”>Couple</span>&lt;T&gt; {
+
+    <span class=”kw”>private</span> T member1;
+    <span class=”kw”>private</span> T member2;
+
+    <span class=”kw”>public</span> <span class=”ty”>Couple</span>(T member1, T member2) {
+        <span class=”kw”>this</span>.member1 = member1;
+        <span class=”kw”>this</span>.member2 = member2;
+    }
+
+    <span class=”kw”>public void</span> print() {
+        <span class=”ty”>System</span>.out.println(<span class=”st”>”Member 1: “</span> + member1.toString());
+        <span class=”ty”>System</span>.out.println(<span class=”st”>”Member 2: “</span> + member2.toString());
+    }
+}
+
+<span class=”cm”>// Verwendung mit verschiedenen Typen:</span>
+<span class=”ty”>Couple</span>&lt;<span class=”ty”>Studierende</span>&gt; team = <span class=”kw”>new</span> <span class=”ty”>Couple</span>&lt;<span class=”ty”>Studierende</span>&gt;(s1, s2);
+<span class=”ty”>Couple</span>&lt;<span class=”ty”>String</span>&gt;      duo  = <span class=”kw”>new</span> <span class=”ty”>Couple</span>&lt;<span class=”ty”>String</span>&gt;(<span class=”st”>”Asterix”</span>, <span class=”st”>”Obelix”</span>);</pre>
+      <p><code class=”inline”>toString()</code> ist immer aufrufbar, da jede Klasse von <code class=”inline”>Object</code> erbt und damit mindestens die rudimentäre <code class=”inline”>Object.toString()</code> verfügbar ist. Eigene Klassen wie <code class=”inline”>Person</code> können sie überschreiben.</p>
+      <h4>Standard-Interfaces für Generics</h4>
+      <ul>
+        <li><strong>Iterable&lt;T&gt;</strong>: Methode <code class=”inline”>iterator()</code> – ermöglicht die Iterator-Schleife <code class=”inline”>for(T x : generic)</code>.</li>
+        <li><strong>Comparable</strong>: Methode <code class=”inline”>compareTo()</code> – ermöglicht Vergleiche für Sortierungen. Comparable ist selbst eine Generic.</li>
+      </ul>
+    </div>
+
+    <div class=”block” id=”k10-iterierbar”>
+      <h3>Iterierbare Generics</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Iterierbare Generics”, S. 560–599</div>
+      <p>Eine iterierbare Generic implementiert <code class=”inline”>Iterable&lt;T&gt;</code> und stellt über deren Methode <code class=”inline”>iterator()</code> ein Iterator-Objekt bereit. Dieser Iterator implementiert <code class=”inline”>Iterator&lt;T&gt;</code> mit den Methoden <code class=”inline”>hasNext()</code> und <code class=”inline”>next()</code>. Hinter jedem <code class=”inline”>for(T x : behälter)</code>-Loop verbirgt sich genau dieser Mechanismus.</p>
+      <pre class=”code”><span class=”kw”>import</span> java.util.Iterator;
+
+<span class=”kw”>public class</span> <span class=”ty”>SmallList</span>&lt;T&gt; <span class=”kw”>implements</span> <span class=”ty”>Iterable</span>&lt;T&gt; {
+
+    <span class=”kw”>private</span> <span class=”ty”>Object</span>[] values;   <span class=”cm”>// T[] ist vom Compiler nicht erlaubt!</span>
+    <span class=”kw”>private int</span> noOfElements;
+
+    <span class=”kw”>public</span> <span class=”ty”>SmallList</span>(<span class=”kw”>int</span> maxSize) {
+        values = <span class=”kw”>new</span> <span class=”ty”>Object</span>[maxSize];
+        noOfElements = 0;
+    }
+
+    <span class=”kw”>public void</span> add(T element) {
+        <span class=”cm”>// bei Bedarf: Arrays.copyOf(values, values.length + 1)</span>
+        values[noOfElements++] = element;
+    }
+
+    <span class=”kw”>public</span> T get(<span class=”kw”>int</span> index) {
+        <span class=”kw”>return</span> (T) values[index]; <span class=”cm”>// TypeCast auf T nötig</span>
+    }
+
+    @<span class=”ty”>Override</span>
+    <span class=”kw”>public</span> <span class=”ty”>Iterator</span>&lt;T&gt; iterator() {
+        <span class=”kw”>return new</span> <span class=”ty”>SmallListIterator</span>&lt;T&gt;(<span class=”kw”>this</span>);
+    }
+}</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        <code class=”inline”>T[] values = new T[size]</code> wird vom Compiler <strong>nicht</strong> akzeptiert – stattdessen <code class=”inline”>Object[]</code> verwenden, beim Zugriff TypeCast auf <code class=”inline”>(T)</code>. Verlängerung: <code class=”inline”>Arrays.copyOf(values, values.length + 1)</code>. Teilkopie: <code class=”inline”>Arrays.copyOfRange(values, von, bis)</code>.
+      </div>
+    </div>
+
+    <div class=”block” id=”k10-wildcards”>
+      <h3>Wildcards bei der Typisierung</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Wildcards bei der Typisierung von Generics”, S. 600–626</div>
+      <p>Wildcards ermöglichen Methoden, eine Generic mit <em>zur Programmierzeit unbekanntem</em> Inhaltstyp entgegenzunehmen:</p>
+      <table style=”width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;”>
+        <thead>
+          <tr style=”border-bottom:2px solid var(--line);”>
+            <th style=”text-align:left; padding:6px 10px; font-family:'IBM Plex Mono',monospace;”>Syntax</th>
+            <th style=”text-align:left; padding:6px 10px;”>Beschreibung</th>
+            <th style=”text-align:left; padding:6px 10px;”>Typischer Zweck</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>Generic&lt;?&gt;</code></td>
+            <td style=”padding:6px 10px;”>Beliebiger Typ</td>
+            <td style=”padding:6px 10px;”>Nur lesen; kein setMember() möglich</td>
+          </tr>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>Generic&lt;? extends Clazz&gt;</code></td>
+            <td style=”padding:6px 10px;”>Clazz oder Kindklasse (Upper-Bound)</td>
+            <td style=”padding:6px 10px;”>Lesen – Typ ist garantiert mindestens Clazz</td>
+          </tr>
+          <tr>
+            <td style=”padding:6px 10px;”><code class=”inline”>Generic&lt;? super Clazz&gt;</code></td>
+            <td style=”padding:6px 10px;”>Clazz oder Superklasse (Lower-Bound)</td>
+            <td style=”padding:6px 10px;”>Schreiben – Objekte vom Typ Clazz sicher einfügen</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre class=”code”><span class=”cm”>// Upper-bound: Liste lesen – enthält Person oder Kindklasse</span>
+<span class=”kw”>public void</span> printPersons(<span class=”ty”>ArrayList</span>&lt;? <span class=”kw”>extends</span> <span class=”ty”>Person</span>&gt; liste) {
+    <span class=”kw”>for</span> (<span class=”ty”>Person</span> p : liste) {
+        <span class=”ty”>System</span>.out.println(p.getVorname() + <span class=”st”>” “</span> + p.getNachname());
+    }
+}
+
+<span class=”cm”>// Lower-bound: in Liste schreiben – nimmt RennTeilnehmer auf</span>
+<span class=”kw”>public void</span> addCandidates(
+        <span class=”ty”>ArrayList</span>&lt;? <span class=”kw”>super</span> <span class=”ty”>RennTeilnehmer</span>&gt; ziel,
+        <span class=”ty”>ArrayList</span>&lt;? <span class=”kw”>extends</span> <span class=”ty”>RennTeilnehmer</span>&gt; quelle) {
+    <span class=”kw”>for</span> (<span class=”ty”>RennTeilnehmer</span> r : quelle) ziel.add(r);
+}</pre>
+    </div>
+
+    <div class=”block” id=”k10-collections”>
+      <h3>Das Java-Collection-Framework</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Das Java-Collection-Framework”, S. 627–685</div>
+      <p>Java-Collections sind vorgefertigte generische Datenstrukturen. Alle implementieren eine Teilmenge der Interfaces <code class=”inline”>Iterable</code>, <code class=”inline”>Collection</code>, <code class=”inline”>List</code>, <code class=”inline”>Set</code>, <code class=”inline”>Queue</code> oder <code class=”inline”>Map</code>.</p>
+      <h4>ArrayList – geordnete, wahlfreie Liste</h4>
+      <ul>
+        <li>Geordnet (Reihenfolge des Einfügens), wahlfrei via <code class=”inline”>get(int index)</code>.</li>
+        <li>Nicht thread-sicher, Duplikate erlaubt.</li>
+        <li>Wichtigste Methoden: <code class=”inline”>add()</code>, <code class=”inline”>remove(Object)</code>, <code class=”inline”>remove(int)</code>, <code class=”inline”>get()</code>, <code class=”inline”>size()</code>, <code class=”inline”>clear()</code>, <code class=”inline”>isEmpty()</code>, <code class=”inline”>sort(Comparator)</code>.</li>
+      </ul>
+      <pre class=”code”><span class=”cm”>// Comparable in der Datenklasse implementieren:</span>
+<span class=”kw”>public int</span> compareTo(<span class=”ty”>Object</span> o) {
+    <span class=”ty”>Person</span> p = (<span class=”ty”>Person</span>) o;
+    <span class=”kw”>return this</span>.persnr - p.getPersnr(); <span class=”cm”>// &lt;0 | 0 | &gt;0</span>
+}
+
+<span class=”cm”>// Comparator-Klasse für sort():</span>
+<span class=”kw”>public class</span> <span class=”ty”>ComparePerson</span> <span class=”kw”>implements</span> <span class=”ty”>Comparator</span>&lt;<span class=”ty”>Person</span>&gt; {
+    @<span class=”ty”>Override</span>
+    <span class=”kw”>public int</span> compare(<span class=”ty”>Person</span> p1, <span class=”ty”>Person</span> p2) {
+        <span class=”kw”>return</span> p1.compareTo(p2);
+    }
+}
+liste.sort(<span class=”kw”>new</span> <span class=”ty”>ComparePerson</span>()); <span class=”cm”>// nach Persnr. sortieren</span></pre>
+      <h4>HashMap&lt;K, V&gt; – Schlüssel-Wert-Zuordnung</h4>
+      <ul>
+        <li>Objekte (Values) werden nach einem eindeutigen Schlüssel (Key) abgelegt.</li>
+        <li>Keys sind <em>nicht</em> duplizierbar, Values sind duplizierbar.</li>
+        <li>Nicht direkt iterierbar; Zugriff über Key: <code class=”inline”>get(key)</code>.</li>
+        <li>Methoden: <code class=”inline”>put(k,v)</code>, <code class=”inline”>get(k)</code>, <code class=”inline”>remove(k)</code>, <code class=”inline”>replace(k, vAlt, vNeu)</code>, <code class=”inline”>containsKey(k)</code>, <code class=”inline”>containsValue(v)</code>.</li>
+      </ul>
+      <pre class=”code”><span class=”ty”>HashMap</span>&lt;<span class=”ty”>Integer</span>, <span class=”ty”>Person</span>&gt; map = <span class=”kw”>new</span> <span class=”ty”>HashMap</span>&lt;&gt;();
+map.put(p1.getPersnr(), p1);   <span class=”cm”>// Key = Personalnummer (Integer)</span>
+<span class=”ty”>Person</span> p = map.get(5);         <span class=”cm”>// Direktzugriff per Key</span>
+map.remove(3);                  <span class=”cm”>// Eintrag mit Key 3 löschen</span>
+map.replace(3, pAlt, pNeu);    <span class=”cm”>// Value tauschen</span></pre>
+      <h4>HashSet&lt;T&gt; – Menge ohne Duplikate</h4>
+      <ul>
+        <li>Keine Duplikate – standardmäßig werden <em>Objektreferenzen</em> verglichen.</li>
+        <li>Ist iterierbar; Methoden: <code class=”inline”>add()</code>, <code class=”inline”>remove()</code>, <code class=”inline”>clear()</code>, <code class=”inline”>size()</code>.</li>
+      </ul>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Zwei verschiedene Referenzen mit <em>identischem Inhalt</em> gelten im HashSet als <strong>unterschiedliche Elemente</strong>, solange keine angepasste <code class=”inline”>equals()</code>-Methode implementiert ist. Nur das nochmalige Einfügen der <em>gleichen Referenz</em> wird als Duplikat erkannt und abgewiesen.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 11 ============ -->
+  <section class=”chapter” id=”kap-11”>
+    <div class=”chapter-head”>
+      <span class=”eyebrow”>Kapitel 11 <span class=”pages”>· Skript S. 686–713</span></span>
+      <h2>Annotationen</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Annotationen hängen Metainformation an Quellcode-Elemente (Klassen, Methoden, Attribute). Sie beginnen mit <code class=”inline”>@</code>, werden vom Compiler ausgewertet und können selbst definiert werden – über <code class=”inline”>@interface</code>. Java liefert vorgefertigte Annotationen wie <code class=”inline”>@Override</code>, <code class=”inline”>@Target</code> oder <code class=”inline”>@Retention</code>. Selbstdefinierte Annotationen können über die Java-Reflections-API zur Laufzeit ausgelesen werden.</p>
+    </div>
+
+    <div class=”block” id=”k11-grundlagen”>
+      <h3>Was sind Annotationen?</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Annotationen”, S. 687–692</div>
+      <p>Eine Annotation ist Metainformation, die über die Java-Modifizierer hinausgeht. Sie wird als Interface mit dem Schlüsselwort <code class=”inline”>@interface</code> definiert und kann attributähnliche Methoden enthalten:</p>
+      <pre class=”code”><span class=”cm”>// Definition einer Marker-Annotation (ohne Attribute):</span>
+<span class=”kw”>public @interface</span> <span class=”ty”>SoDa</span> { }
+
+<span class=”cm”>// Verwendung – ohne Einschränkung an Klasse und Methode:</span>
+@<span class=”ty”>SoDa</span>
+<span class=”kw”>public class</span> <span class=”ty”>MeineKlasse</span> {
+    @<span class=”ty”>SoDa</span>
+    <span class=”kw”>public void</span> hallo() {
+        <span class=”ty”>System</span>.out.println(<span class=”st”>”Ich bin einfach so da!”</span>);
+    }
+}</pre>
+      <p><strong>Erlaubte Attributtypen</strong> in Annotationen: <code class=”inline”>String</code>, elementare Datentypen (<code class=”inline”>int</code>, nicht <code class=”inline”>Integer</code>), <code class=”inline”>Class</code>, andere Annotationen, Enum-Typen sowie eindimensionale Arrays der genannten Typen.</p>
+    </div>
+
+    <div class=”block” id=”k11-eigene”>
+      <h3>Eigene Annotationen mit API-Annotationen konfigurieren</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Weitere Eigenschaften von eigenen Annotationen”, S. 693–701</div>
+      <p>Eigene Annotationen werden selbst mit API-Annotationen präzisiert:</p>
+      <table style=”width:100%; border-collapse:collapse; font-size:14px; margin:12px 0;”>
+        <thead>
+          <tr style=”border-bottom:2px solid var(--line);”>
+            <th style=”text-align:left; padding:6px 10px; font-family:'IBM Plex Mono',monospace;”>API-Annotation</th>
+            <th style=”text-align:left; padding:6px 10px;”>Bedeutung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>@Target(TYPE)</code></td>
+            <td style=”padding:6px 10px;”>Darf nur an Klassen-/Interface-Deklarationen gehängt werden.</td>
+          </tr>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>@Target(METHOD)</code></td>
+            <td style=”padding:6px 10px;”>Darf nur an Methoden-Köpfe gehängt werden.</td>
+          </tr>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>@Retention(RUNTIME)</code></td>
+            <td style=”padding:6px 10px;”>Annotation ist auch zur Laufzeit über Reflections abfragbar.</td>
+          </tr>
+          <tr style=”border-bottom:1px solid var(--line);”>
+            <td style=”padding:6px 10px;”><code class=”inline”>@Documented</code></td>
+            <td style=”padding:6px 10px;”>Erscheint in der Javadoc-Dokumentation.</td>
+          </tr>
+          <tr>
+            <td style=”padding:6px 10px;”><code class=”inline”>@Inherited</code></td>
+            <td style=”padding:6px 10px;”>Wirkt automatisch auch auf abgeleitete Klassen.</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre class=”code”><span class=”kw”>import static</span> java.lang.annotation.ElementType.TYPE;
+<span class=”kw”>import static</span> java.lang.annotation.RetentionPolicy.RUNTIME;
+<span class=”kw”>import</span> java.lang.annotation.Retention;
+<span class=”kw”>import</span> java.lang.annotation.Target;
+
+@<span class=”ty”>Retention</span>(RUNTIME)
+@<span class=”ty”>Target</span>(TYPE)
+<span class=”kw”>public @interface</span> <span class=”ty”>ClassHeader</span> {
+    <span class=”kw”>int</span>    version();   <span class=”cm”>// Attributmethoden</span>
+    <span class=”ty”>String</span> faculty();
+    <span class=”ty”>String</span> university();
+}
+
+<span class=”cm”>// Verwendung (Attributwerte als benannte Parameter):</span>
+@<span class=”ty”>ClassHeader</span>(version=1, faculty=<span class=”st”>”Informatik”</span>, university=<span class=”st”>”HSAS”</span>)
+<span class=”kw”>public class</span> <span class=”ty”>MeineKlasse</span> { ... }</pre>
+    </div>
+
+    <div class=”block” id=”k11-reflections”>
+      <h3>Laufzeitabfrage via Java-Reflections</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Laufzeit-Abfrage der angehefteten Annotationen”, S. 702–713</div>
+      <p>Java-Reflections ermöglichen zur Laufzeit Abfragen über Klassen, Methoden und deren Annotationen. Zentral ist die statische Variable <code class=”inline”>.class</code> jeder Java-Klasse vom Typ <code class=”inline”>java.lang.Class</code>:</p>
+      <pre class=”code”><span class=”kw”>import</span> java.lang.reflect.Method;
+
+<span class=”cm”>// Annotation an Klasse prüfen und auslesen:</span>
+<span class=”kw”>if</span> (<span class=”ty”>MeineKlasse</span>.<span class=”kw”>class</span>.isAnnotationPresent(<span class=”ty”>ClassHeader</span>.<span class=”kw”>class</span>)) {
+    <span class=”ty”>ClassHeader</span> ch =
+        <span class=”ty”>MeineKlasse</span>.<span class=”kw”>class</span>.getAnnotation(<span class=”ty”>ClassHeader</span>.<span class=”kw”>class</span>);
+    <span class=”ty”>System</span>.out.println(<span class=”st”>”Faculty: “</span> + ch.faculty());
+}
+
+<span class=”cm”>// Alle Methoden einer Klasse nach Annotation durchsuchen:</span>
+<span class=”kw”>for</span> (<span class=”ty”>Method</span> m : <span class=”ty”>MeineKlasse</span>.<span class=”kw”>class</span>.getMethods()) {
+    <span class=”kw”>if</span> (m.isAnnotationPresent(<span class=”ty”>MethodHeader</span>.<span class=”kw”>class</span>)) {
+        <span class=”ty”>MethodHeader</span> mh = m.getAnnotation(<span class=”ty”>MethodHeader</span>.<span class=”kw”>class</span>);
+        <span class=”ty”>System</span>.out.println(m.getName() + <span class=”st”>” – Autor: “</span> + mh.author());
+    }
+}</pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Annotationen sind zur Laufzeit nur abfragbar, wenn sie mit <code class=”inline”>@Retention(RUNTIME)</code> gekennzeichnet sind. Ohne diese Angabe sind sie nur zur Compile-Zeit verfügbar und für Reflections unsichtbar.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KAPITEL 12 ============ -->
+  <section class=”chapter” id=”kap-12”>
+    <div class=”chapter-head”>
+      <span class=”eyebrow”>Kapitel 12 <span class=”pages”>· Skript S. 714–774</span></span>
+      <h2>Threads</h2>
+    </div>
+
+    <div class=”summary”>
+      <span class=”tag”>Zusammenfassung</span>
+      <p>Threads sind parallel bzw. quasi-parallel ausführbare Bestandteile eines Prozesses. In Java werden sie durch Objekte der Klasse <code class=”inline”>Thread</code> oder durch Klassen, die <code class=”inline”>Runnable</code> implementieren, realisiert. Der gleichzeitige Zugriff mehrerer Threads auf gemeinsame Daten muss durch <code class=”inline”>synchronized</code>-Methoden oder -Blöcke geschützt werden (Monitor-Konzept).</p>
+    </div>
+
+    <div class=”block” id=”k12-prozesse”>
+      <h3>Threads vs. Prozesse</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Threads vs. Prozesse”, S. 716–717</div>
+      <p>Ein <strong>Prozess</strong> ist ein Programm in Ausführung (mit eigener PID). Ein <strong>Thread</strong> ist ein parallel ausführbarer Bestandteil <em>innerhalb</em> eines Prozesses – mehrere Threads teilen sich den Adressraum des Prozesses.</p>
+      <p>Typische Anwendungsfälle:</p>
+      <ul>
+        <li>Server bedient mehrere Clients gleichzeitig – für jede Client-Anfrage ein eigener Thread.</li>
+        <li>Große Bildmatrix wird in Kacheln zerlegt und jede Kachel von einem separaten Thread verarbeitet.</li>
+        <li>Producer-Consumer: ein Thread erzeugt Datensätze, ein anderer verarbeitet sie sobald sie verfügbar sind.</li>
+      </ul>
+    </div>
+
+    <div class=”block” id=”k12-java”>
+      <h3>Threads in Java – zwei Architekturen</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Threads in Java”, S. 718–745</div>
+      <h4>Weg 1: Klasse extends Thread</h4>
+      <pre class=”code”><span class=”kw”>public class</span> <span class=”ty”>MeinThread</span> <span class=”kw”>extends</span> <span class=”ty”>Thread</span> {
+    @<span class=”ty”>Override</span>
+    <span class=”kw”>public void</span> run() {
+        <span class=”cm”>// nebenlaeufiger Code</span>
+    }
+}
+<span class=”ty”>MeinThread</span> t = <span class=”kw”>new</span> <span class=”ty”>MeinThread</span>();
+t.start(); <span class=”cm”>// startet run() als Nebenläufigkeit in der VM</span></pre>
+      <p><strong>Nachteil:</strong> Die Klasse kann keine eigene weitere Superklasse haben, da die Superklassenbeziehung für <code class=”inline”>Thread</code> benötigt wird.</p>
+      <h4>Weg 2: Klasse implements Runnable (empfohlen)</h4>
+      <pre class=”code”><span class=”cm”>// Eigene Vererbungshierarchie bleibt frei:</span>
+<span class=”kw”>public class</span> <span class=”ty”>Gast</span> <span class=”kw”>extends</span> <span class=”ty”>Person</span> <span class=”kw”>implements</span> <span class=”ty”>Runnable</span> {
+    @<span class=”ty”>Override</span>
+    <span class=”kw”>public void</span> run() {
+        <span class=”cm”>// nebenlaeufiger Code des Gastes</span>
+    }
+}
+
+<span class=”ty”>Gast</span>   g = <span class=”kw”>new</span> <span class=”ty”>Gast</span>(<span class=”st”>”Emil”</span>, huette);
+<span class=”ty”>Thread</span> t = <span class=”kw”>new</span> <span class=”ty”>Thread</span>(g); <span class=”cm”>// Runnable an Thread übergeben</span>
+t.start();                  <span class=”cm”>// startet g.run() als Nebenläufigkeit</span></pre>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        Das Erzeugen eines Thread-Objektes startet es noch <strong>nicht</strong> – erst <code class=”inline”>t.start()</code> aktiviert die Nebenläufigkeit. Ein direkter Aufruf von <code class=”inline”>t.run()</code> wäre nur ein normaler sequentieller Methodenaufruf, keine Parallelisierung!
+      </div>
+    </div>
+
+    <div class=”block” id=”k12-sync”>
+      <h3>Thread-Synchronisation – das Monitor-Konzept</h3>
+      <div class=”src”>Quelle: Skript Teil 2, Abschnitt „Thread-Synchronisation”, S. 746–774</div>
+      <p>Wenn mehrere Threads gleichzeitig <em>schreibend</em> auf dasselbe Objekt zugreifen, entstehen <strong>kritische Abschnitte</strong>, die zu inkonsistenten Zuständen oder Exceptions führen können. Java löst dies mit dem Schlüsselwort <code class=”inline”>synchronized</code>: Nur ein Thread darf gleichzeitig im synchronisierten Bereich sein – das Objekt wird zum <strong>Monitor</strong>, wartende Threads werden in eine Warteschlange eingestellt.</p>
+      <h4>Drei Arten der Synchronisation</h4>
+      <pre class=”code”><span class=”cm”>// 1. Synchronisierte Instanz-Methode → Objekt ist Monitor</span>
+<span class=”kw”>public synchronized int</span> kochen(String name, <span class=”kw”>int</span> gramm) {
+    <span class=”cm”>// geschützter Code – nur ein Thread gleichzeitig</span>
+}
+
+<span class=”cm”>// 2. Synchronisierte statische Methode → Klasse ist Monitor</span>
+<span class=”kw”>public static synchronized int</span> kochen(...) { ... }
+
+<span class=”cm”>// 3. Synchronisierter Block auf Referenz → Referenz ist Monitor</span>
+<span class=”kw”>synchronized</span> (herd) {
+    <span class=”cm”>// geschützter Code bezogen auf das herd-Objekt</span>
+}</pre>
+      <h4>Thread-sichere Collections</h4>
+      <p>Die meisten Java-Collections sind <strong>nicht thread-sicher</strong>. Sichere Alternativen:</p>
+      <ul>
+        <li><code class=”inline”>Vector</code> statt <code class=”inline”>ArrayList</code></li>
+        <li><code class=”inline”>ConcurrentHashMap</code> statt <code class=”inline”>HashMap</code></li>
+      </ul>
+      <div class=”hint”>
+        <span class=”tag”>Prüfungshinweis</span>
+        <code class=”inline”>ArrayList</code> und <code class=”inline”>HashMap</code> sind <strong>nicht thread-sicher</strong>! Parallele schreibende Zugriffe können zu <code class=”inline”>NullPointerException</code> oder korrumpierten Daten führen – wie im Spaghetti-Hütten-Beispiel gezeigt. Kritische Abschnitte mit <code class=”inline”>synchronized</code> schützen oder auf <code class=”inline”>Vector</code>/<code class=”inline”>ConcurrentHashMap</code> ausweichen.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Lernwebsite auf Basis der Vorlesungsskripte „Programmierung 2, Teil 1 &amp; Teil 2” von Prof. Dr. Ute Matecki, Fakultät Informatik.
+    Inhalte sind eigenständige Zusammenfassungen für die persönliche Prüfungsvorbereitung; Seitenangaben verweisen auf das Original-Skript.
+  </footer>
+</main>
+</div>
+
+<script>
+  // Theme-Umschaltung (hell/dunkel), respektiert Systemeinstellung als Start
+  const root = document.documentElement;
+  const saved = null; // bewusst kein localStorage – Theme gilt pro Sitzung
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    root.setAttribute("data-theme", "dark");
+  }
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    root.setAttribute("data-theme",
+      root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  // Mobile-Navigation
+  const sidebar = document.getElementById("sidebar");
+  document.getElementById("menuBtn").addEventListener("click", () =>
+    sidebar.classList.toggle("open"));
+  sidebar.addEventListener("click", e => {
+    if (e.target.tagName === "A") sidebar.classList.remove("open");
+  });
+
+  // Scrollspy: aktives Kapitel in der Navigation markieren
+  const chapterLinks = [...document.querySelectorAll(".nav-chapter > a")];
+  const sections = chapterLinks
+    .map(a => document.querySelector(a.getAttribute("href")))
+    .filter(Boolean);
+  const spy = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        chapterLinks.forEach(a => a.classList.toggle(
+          "active", a.getAttribute("href") === "#" + en.target.id));
+      }
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  sections.forEach(s => spy.observe(s));
+</script>
+</body>
+</html>
